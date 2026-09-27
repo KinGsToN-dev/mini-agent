@@ -1,4 +1,4 @@
-﻿"""Регистр инструментов и их схем для LLM."""
+"""Регистр инструментов и их схем для LLM."""
 
 from .shell import run_shell
 from .files import read_file, write_file
@@ -11,16 +11,19 @@ from .clipboard import clipboard
 from .notify import notify
 from .pyexec import python_exec
 from .web_search import web_search
+from .mt5_tools import mt5_quote, mt5_bars, mt5_account, mt5_positions
+from .news_tools import econ_calendar
+from .telegram_tools import telegram_send
 
-# Глобальный клиент для vision-запросов.
-# Устанавливается из agent/core.py при инициализации.
+
+# Глобальный клиент для vision-запросов
 _VISION_CLIENT = None
 
 
 def set_vision_client(client):
-    """Регистрирует genai-клиент для vision-функций."""
     global _VISION_CLIENT
     _VISION_CLIENT = client
+
 
 TOOL_SCHEMAS = [
     {
@@ -59,8 +62,7 @@ TOOL_SCHEMAS = [
     },
     {
         "type": "function", "name": "list_dir",
-        "description": ("Структурированный список файлов и папок в директории. "
-                       "Лучше чем run_shell('dir'). Поддерживает рекурсию и фильтр по имени."),
+        "description": "Структурированный список файлов и папок в директории.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -72,132 +74,178 @@ TOOL_SCHEMAS = [
     },
     {
         "type": "function", "name": "grep",
-        "description": ("Поиск текста (regex) в файлах. Используй для поиска "
-                       "определений, использования, TODO, ошибок."),
+        "description": "Поиск текста (regex) в файлах.",
         "parameters": {
             "type": "object",
             "properties": {
-                "pattern": {"type": "string", "description": "Регулярное выражение"},
-                "path": {"type": "string", "description": "Где искать (по умолчанию '.')"},
-                "file_pattern": {"type": "string", "description": "Фильтр по файлам, например '*.py'"},
-                "max_results": {"type": "integer", "description": "Максимум результатов (по умолчанию 50)"},
+                "pattern": {"type": "string"},
+                "path": {"type": "string"},
+                "file_pattern": {"type": "string"},
+                "max_results": {"type": "integer"},
             },
             "required": ["pattern"],
         },
     },
     {
         "type": "function", "name": "processes",
-        "description": ("Список процессов (action='list') или убийство процесса (action='kill'). "
-                       "Используй для диагностики 'что грузит CPU' или закрытия зависших приложений."),
+        "description": "Список процессов или kill процесса (action='list'/'kill').",
         "parameters": {
             "type": "object",
             "properties": {
                 "action": {"type": "string", "enum": ["list", "kill"]},
-                "filter": {"type": "string", "description": "Фильтр по имени процесса"},
+                "filter": {"type": "string"},
                 "sort_by": {"type": "string", "enum": ["cpu", "memory", "name"]},
-                "top": {"type": "integer", "description": "Сколько показать (по умолчанию 15)"},
-                "pid": {"type": "integer", "description": "PID для kill"},
-                "name": {"type": "string", "description": "Имя процесса для kill"},
+                "top": {"type": "integer"},
+                "pid": {"type": "integer"},
+                "name": {"type": "string"},
             },
             "required": ["action"],
         },
     },
     {
         "type": "function", "name": "screenshot",
-        "description": "Сделать скриншот экрана и сохранить в файл PNG (без анализа).",
+        "description": "Сделать скриншот экрана и сохранить в файл PNG.",
         "parameters": {
             "type": "object",
             "properties": {
-                "save_path": {"type": "string", "description": "Куда сохранить"},
+                "save_path": {"type": "string"},
             },
         },
     },
     {
         "type": "function", "name": "screenshot_analyze",
-        "description": ("Сделать скриншот экрана И ОПИСАТЬ его содержимое через Gemini vision. "
-                       "Используй, когда пользователь спрашивает 'что на экране', "
-                       "'прочитай ошибку', 'опиши окно' и т.п."),
+        "description": "Скриншот + описание через Gemini vision.",
         "parameters": {
             "type": "object",
             "properties": {
-                "prompt": {"type": "string",
-                          "description": "Что именно спросить про скриншот (по умолчанию 'Опиши что на экране')"},
-                "save_path": {"type": "string", "description": "Куда сохранить PNG"},
+                "prompt": {"type": "string"},
+                "save_path": {"type": "string"},
             },
         },
     },
     {
         "type": "function", "name": "http_get",
-        "description": ("Сделать GET-запрос по URL и получить содержимое "
-                       "(HTML, JSON, текст). Используй для чтения веб-страниц, "
-                       "документации, API. Только http/https. Локальные адреса запрещены."),
+        "description": "GET-запрос по URL (http/https). Локальные адреса запрещены.",
         "parameters": {
             "type": "object",
             "properties": {
-                "url": {"type": "string", "description": "Полный URL с http:// или https://"},
-                "timeout": {"type": "integer", "description": "Секунды (по умолчанию 10)"},
-                "save_to": {"type": "string", "description": "Сохранить в файл вместо возврата"},
+                "url": {"type": "string"},
+                "timeout": {"type": "integer"},
+                "save_to": {"type": "string"},
             },
             "required": ["url"],
         },
     },
     {
         "type": "function", "name": "clipboard",
-        "description": ("Работа с буфером обмена: get — прочитать, set — записать. "
-                       "Только текст."),
+        "description": "Работа с буфером обмена: get — прочитать, set — записать.",
         "parameters": {
             "type": "object",
             "properties": {
                 "action": {"type": "string", "enum": ["get", "set"]},
-                "text": {"type": "string", "description": "Что записать (для action='set')"},
+                "text": {"type": "string"},
             },
             "required": ["action"],
         },
     },
     {
         "type": "function", "name": "notify",
-        "description": ("Показать Windows-уведомление (toast). Используй для "
-                       "оповещения о завершении длинных задач."),
+        "description": "Показать Windows-уведомление (toast).",
         "parameters": {
             "type": "object",
             "properties": {
-                "title": {"type": "string", "description": "Заголовок"},
-                "message": {"type": "string", "description": "Текст уведомления"},
-                "duration": {"type": "integer", "description": "Секунды (по умолчанию 5)"},
+                "title": {"type": "string"},
+                "message": {"type": "string"},
+                "duration": {"type": "integer"},
             },
             "required": ["message"],
         },
     },
     {
         "type": "function", "name": "python_exec",
-        "description": ("Выполнить Python-код и вернуть stdout/stderr. "
-                       "Используй для вычислений, парсинга JSON, обработки текста. "
-                       "Запрещены: os, subprocess, shutil, eval, exec, open."),
+        "description": "Выполнить Python-код. Запрещены: os, subprocess, eval, exec, open.",
         "parameters": {
             "type": "object",
             "properties": {
-                "code": {"type": "string", "description": "Python-код"},
-                "timeout": {"type": "integer", "description": "Секунды (по умолчанию 30)"},
-                "cwd": {"type": "string", "description": "Рабочая директория"},
+                "code": {"type": "string"},
+                "timeout": {"type": "integer"},
+                "cwd": {"type": "string"},
             },
             "required": ["code"],
         },
     },
     {
         "type": "function", "name": "web_search",
-        "description": ("Поиск в интернете через DuckDuckGo. Возвращает список "
-                       "результатов: заголовок + URL + описание. Используй, когда "
-                       "нужна актуальная информация из интернета."),
+        "description": "Поиск в интернете через Tavily.",
         "parameters": {
             "type": "object",
             "properties": {
-                "query": {"type": "string", "description": "Поисковый запрос"},
-                "max_results": {"type": "integer", "description": "Максимум результатов (по умолчанию 8)"},
+                "query": {"type": "string"},
+                "max_results": {"type": "integer"},
             },
             "required": ["query"],
         },
     },
+    {
+        "type": "function", "name": "mt5_quote",
+        "description": "Текущая котировка (bid/ask) из MetaTrader 5.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "symbol": {"type": "string", "description": "EURUSD, XAUUSD, GBPUSD..."},
+            },
+            "required": ["symbol"],
+        },
+    },
+    {
+        "type": "function", "name": "mt5_bars",
+        "description": "OHLC-свечи из MT5. timeframe: M1, M5, M15, M30, H1, H4, D1, W1, MN1.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "symbol": {"type": "string"},
+                "timeframe": {"type": "string"},
+                "count": {"type": "integer"},
+            },
+            "required": ["symbol"],
+        },
+    },
+    {
+        "type": "function", "name": "mt5_account",
+        "description": "Информация об аккаунте MT5: баланс, equity, маржа.",
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "type": "function", "name": "mt5_positions",
+        "description": "Открытые позиции в MT5.",
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "type": "function", "name": "econ_calendar",
+        "description": "Экономический календарь. countries: US,EU,GB. importance: low/medium/high/all.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "countries": {"type": "string"},
+                "importance": {"type": "string"},
+                "limit": {"type": "integer"},
+            },
+        },
+    },
+    {
+        "type": "function", "name": "telegram_send",
+        "description": "Отправить сообщение в Telegram.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "message": {"type": "string"},
+                "title": {"type": "string"},
+            },
+            "required": ["message"],
+        },
+    },
 ]
+
 
 TOOL_FUNCTIONS = {
     "run_shell": run_shell,
@@ -213,6 +261,12 @@ TOOL_FUNCTIONS = {
     "notify": notify,
     "python_exec": python_exec,
     "web_search": web_search,
+    "mt5_quote": mt5_quote,
+    "mt5_bars": mt5_bars,
+    "mt5_account": mt5_account,
+    "mt5_positions": mt5_positions,
+    "econ_calendar": econ_calendar,
+    "telegram_send": telegram_send,
 }
 
 
@@ -224,5 +278,3 @@ def execute_tool(name: str, args: dict) -> str:
         return fn(**args)
     except TypeError as e:
         return f"[ERROR] Неверные аргументы для {name}: {e}"
-
-
