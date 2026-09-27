@@ -8,13 +8,64 @@ from agent import GeminiAgent
 from agent import sessions as sessions_mod
 from tools.shell import get_mode, set_confirm_callback
 from repl.commands import handle_command, ask_confirmation, looks_like_repl_command
-
+from tools.mt5_trade import set_confirm_callback as set_trade_confirm_callback
 console = Console()
+
+
+
+
+def _format_order_info(info: dict) -> str:
+    """Форматирует информацию об ордере для подтверждения."""
+    lines = []
+
+    # Открытие позиции
+    if "symbol" in info and "side" in info:
+        lines.append(f"[bold]{info['symbol']} {info['side']} {info.get('volume', '?')}[/bold]")
+        if info.get("price"):
+            lines.append(f"  Цена: {info['price']}")
+        if info.get("sl"):
+            lines.append(f"  SL: {info['sl']}")
+        if info.get("tp"):
+            lines.append(f"  TP: {info['tp']}")
+        if info.get("account"):
+            lines.append("")
+            lines.append(f"  Аккаунт: {info['account']} ({info.get('account_mode', '?')})")
+
+    # Закрытие всех
+    if info.get("action") == "CLOSE_ALL":
+        lines.append("[bold]ЗАКРЫТЬ ВСЕ ПОЗИЦИИ[/bold]")
+        lines.append(f"  Количество: {info.get('count', '?')}")
+        lines.append(f"  Общая прибыль: {info.get('total_profit', '?')}")
+
+    # Закрытие позиции
+    if "ticket" in info and "profit" in info:
+        lines.append(f"[bold]ЗАКРЫТЬ {info.get('symbol')} {info.get('side')}[/bold]")
+        lines.append(f"  Ticket: {info['ticket']}")
+        lines.append(f"  Объём: {info.get('volume', '?')}")
+        lines.append(f"  Прибыль: {info['profit']:+.2f}")
+
+    return "\n".join(lines)
+
+
+def trade_confirm_callback(order_info: dict) -> bool:
+    """Подтверждение торговой операции."""
+    console.print()
+    console.print(Panel.fit(
+        _format_order_info(order_info),
+        title="ПОДТВЕРЖДЕНИЕ ТОРГОВОЙ ОПЕРАЦИИ",
+        border_style="red",
+    ))
+    answer = Prompt.ask(
+        "[bold red]Подтвердить?[/bold red] [dim](YES/no)[/dim]",
+        default="no",
+    ).strip()
+    return answer.strip().lower() in ("yes", "y", "да", "д", "1", "true")
 
 
 def run_repl(api_key: str):
     agent = GeminiAgent(api_key=api_key)
     set_confirm_callback(ask_confirmation)
+    set_trade_confirm_callback(trade_confirm_callback)
 
     console.print(
         "[bold green]Мини-агент запущен.[/bold green] "

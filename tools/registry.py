@@ -12,6 +12,7 @@ from .notify import notify
 from .pyexec import python_exec
 from .web_search import web_search
 from .mt5_tools import mt5_quote, mt5_bars, mt5_account, mt5_positions, mt5_summary
+from .mt5_trade import mt5_order, mt5_close, mt5_close_all, mt5_modify, mt5_pending
 from .news_tools import econ_calendar
 from .telegram_tools import telegram_send
 
@@ -192,7 +193,7 @@ TOOL_SCHEMAS = [
         "parameters": {
             "type": "object",
             "properties": {
-                "symbol": {"type": "string", "description": "EURUSD, XAUUSD, GBPUSD..."},
+                "symbol": {"type": "string", "description": "EURUSD, XAUUSD, BTCUSD..."},
             },
             "required": ["symbol"],
         },
@@ -230,6 +231,67 @@ TOOL_SCHEMAS = [
         "type": "function", "name": "mt5_positions",
         "description": "Открытые позиции в MT5.",
         "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "type": "function", "name": "mt5_order",
+        "description": "Разместить рыночный ордер в MT5. БЕЗОПАСНОСТЬ: только demo, лимит 0.1 лота, подтверждение. Используй для открытия позиций BUY/SELL.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "symbol": {"type": "string", "description": "Например BTCUSD"},
+                "side": {"type": "string", "enum": ["BUY", "SELL"]},
+                "volume": {"type": "number", "description": "Объём (не более 0.1)"},
+                "sl": {"type": "number", "description": "Stop Loss цена (опционально)"},
+                "tp": {"type": "number", "description": "Take Profit цена (опционально)"},
+                "comment": {"type": "string", "description": "Комментарий"},
+            },
+            "required": ["symbol", "side", "volume"],
+        },
+    },
+    {
+        "type": "function", "name": "mt5_close",
+        "description": "Закрыть позицию по ticket.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "ticket": {"type": "integer", "description": "Ticket позиции"},
+            },
+            "required": ["ticket"],
+        },
+    },
+    {
+        "type": "function", "name": "mt5_close_all",
+        "description": "Закрыть ВСЕ открытые позиции.",
+        "parameters": {"type": "object", "properties": {}},
+    },
+    {
+        "type": "function", "name": "mt5_modify",
+        "description": "Изменить SL/TP позиции по ticket.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "ticket": {"type": "integer"},
+                "sl": {"type": "number"},
+                "tp": {"type": "number"},
+            },
+            "required": ["ticket"],
+        },
+    },
+    {
+        "type": "function", "name": "mt5_pending",
+        "description": "Разместить отложенный ордер (BUY_LIMIT, SELL_LIMIT, BUY_STOP, SELL_STOP).",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "symbol": {"type": "string"},
+                "side": {"type": "string", "enum": ["BUY_LIMIT", "SELL_LIMIT", "BUY_STOP", "SELL_STOP"]},
+                "price": {"type": "number"},
+                "volume": {"type": "number"},
+                "sl": {"type": "number"},
+                "tp": {"type": "number"},
+            },
+            "required": ["symbol", "side", "price", "volume"],
+        },
     },
     {
         "type": "function", "name": "econ_calendar",
@@ -273,10 +335,15 @@ TOOL_FUNCTIONS = {
     "python_exec": python_exec,
     "web_search": web_search,
     "mt5_quote": mt5_quote,
-    "mt5_summary": mt5_summary,
     "mt5_bars": mt5_bars,
+    "mt5_summary": mt5_summary,
     "mt5_account": mt5_account,
     "mt5_positions": mt5_positions,
+    "mt5_order": mt5_order,
+    "mt5_close": mt5_close,
+    "mt5_close_all": mt5_close_all,
+    "mt5_modify": mt5_modify,
+    "mt5_pending": mt5_pending,
     "econ_calendar": econ_calendar,
     "telegram_send": telegram_send,
 }
@@ -295,7 +362,7 @@ TOOL_ALIASES = {
     "search_web": "web_search",
     "google_search": "web_search",
     "search": "web_search",
-    # MT5
+    # MT5 — чтение
     "get_quote": "mt5_quote",
     "quote": "mt5_quote",
     "get_bars": "mt5_bars",
@@ -306,6 +373,17 @@ TOOL_ALIASES = {
     "positions": "mt5_positions",
     "summary": "mt5_summary",
     "get_summary": "mt5_summary",
+    # MT5 — торговля
+    "order": "mt5_order",
+    "buy": "mt5_order",
+    "sell": "mt5_order",
+    "open_position": "mt5_order",
+    "close_position": "mt5_close",
+    "close_all_positions": "mt5_close_all",
+    "closeall": "mt5_close_all",
+    "modify_position": "mt5_modify",
+    "set_sl_tp": "mt5_modify",
+    "pending_order": "mt5_pending",
     # News
     "calendar": "econ_calendar",
     "get_calendar": "econ_calendar",
@@ -330,11 +408,8 @@ TOOL_ALIASES = {
 def execute_tool(name: str, args: dict) -> str:
     # Проверяем алиасы
     if name in TOOL_ALIASES:
-        original = name
         name = TOOL_ALIASES[name]
-        # Логируем (полезно для отладки)
-        # print(f"[alias] {original} -> {name}")
-    
+
     fn = TOOL_FUNCTIONS.get(name)
     if not fn:
         return f"[ERROR] Неизвестный инструмент: {name}. Доступные: {list(TOOL_FUNCTIONS.keys())}"

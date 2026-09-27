@@ -1,15 +1,33 @@
 """Автоматический выбор провайдера под задачу.
 
+Торговые действия (купи/продай/открой/закрой) → Gemini flash
+Трейдинг (брифинг, анализ цены) → Gemini
 Vision → Gemini
+Web search → Gemini
+Анализ → Gemini
 Код → Mistral
-Всё остальное (включая web search) → Groq (быстрый)
+Общее → Groq
 """
 
 import re
 
 # --- Паттерны -----------------------------------------------------------
 
-# Web search — Groq (у него tool web_search) или Gemini
+# Торговые действия — открытие/закрытие/модификация
+TRADE_ACTION_PATTERNS = [
+    r"\b(купи|продай|открой|закрой|открыть|закрыть)\b",
+    r"\b(buy|sell|open|close)\s+\d",
+    r"\bBUY\b", r"\bSELL\b",
+    r"\b(lot|лота|лотов|объём|объем)\s+\d",
+    r"\d+\.\d+\s+(BTCUSD|XAUUSD|EURUSD|GBPUSD|USDJPY|AUDUSD)",
+    r"\b(BTCUSD|XAUUSD|EURUSD|GBPUSD)\s+(BUY|SELL)",
+    r"\b(SL|TP|стоп|тейк)\s+\d",
+    r"\bпозици",
+    r"\bордер\b",
+    r"\bзакрыть\s+вс[её]",
+]
+
+# Web search — Gemini (у него tool web_search и лучше результаты)
 WEB_SEARCH_PATTERNS = [
     r"\bнайди\b.*\b(в интернете|в сети|в гугл|онлайн)\b",
     r"\bпоищи\b",
@@ -25,7 +43,7 @@ WEB_SEARCH_PATTERNS = [
     r"\bfind online\b",
 ]
 
-# Трейдинг — Gemini (грамотный русский, точный анализ)
+# Трейдинг — Gemini (брифинг, анализ цены, котировки)
 TRADING_PATTERNS = [
     r"\bбрифинг\b",
     r"\bанализ\s+(рынка|цены|пары|символа)",
@@ -54,6 +72,22 @@ VISION_PATTERNS = [
     r"\bvision\b",
 ]
 
+# Аналитика — Gemini
+ANALYSIS_PATTERNS = [
+    r"\bпроанализируй\b",
+    r"\bобъясни почему\b",
+    r"\bдокажи\b",
+    r"\bсравни\b",
+    r"\bисследуй\b",
+    r"\bподробно\b.*\bобъясни\b",
+    r"\banalyze\b",
+    r"\bexplain why\b",
+    r"\bcompare\b",
+    r"\bdesign\b",
+    r"\bархитектур",
+    r"\bспроектируй\b",
+]
+
 # Код — Mistral Codestral (заточен под код)
 CODE_PATTERNS = [
     r"\bнапиши\b.*\b(функци|класс|скрипт|код|программ)",
@@ -77,22 +111,6 @@ CODE_PATTERNS = [
     r"\b(напиши|создай|реализуй).*\b(python|javascript|java|c\+\+)\b",
 ]
 
-# Аналитика — Gemini flash (умная)
-ANALYSIS_PATTERNS = [
-    r"\bпроанализируй\b",
-    r"\bобъясни почему\b",
-    r"\bдокажи\b",
-    r"\bсравни\b",
-    r"\bисследуй\b",
-    r"\bподробно\b.*\bобъясни\b",
-    r"\banalyze\b",
-    r"\bexplain why\b",
-    r"\bcompare\b",
-    r"\bdesign\b",
-    r"\bархитектур",
-    r"\bспроектируй\b",
-]
-
 
 def _matches(text: str, patterns: list) -> bool:
     t = text.lower()
@@ -108,7 +126,15 @@ def pick_provider(user_text: str, available: list,
     Возвращает имя провайдера для запроса или None (если не решил).
     available — список доступных провайдеров из registry.
     """
-    # Трейдинг — Gemini (грамотный русский)
+    # Торговые действия — ПЕРВЫМИ, чтобы "купи BTCUSD" не ушло в код
+    if _matches(user_text, TRADE_ACTION_PATTERNS):
+        if "gemini" in available:
+            return "gemini"
+        if "groq" in available:
+            return "groq"
+        return None
+
+    # Трейдинг — Gemini (брифинг, анализ цены)
     if _matches(user_text, TRADING_PATTERNS):
         if "gemini" in available:
             return "gemini"
@@ -116,7 +142,7 @@ def pick_provider(user_text: str, available: list,
             return "groq"
         return None
 
-    # Web search — Gemini (надёжнее: без проблем с tools и лимитами)
+    # Web search — Gemini (надёжнее, чем Groq с его tools)
     if _matches(user_text, WEB_SEARCH_PATTERNS):
         if "gemini" in available:
             return "gemini"
@@ -128,7 +154,6 @@ def pick_provider(user_text: str, available: list,
     if _matches(user_text, VISION_PATTERNS):
         if "gemini" in available:
             return "gemini"
-        # Если Gemini нет — отдадим как есть
         return None
 
     # Аналитика — Gemini (ДО кода: "проанализируй код" = анализ)
@@ -151,12 +176,15 @@ def pick_provider(user_text: str, available: list,
     if "groq" in available:
         return "groq"
 
-    # Fallback — оставляем как есть
     return None
 
 
 def describe_decision(user_text: str) -> str:
     """Короткое описание, почему выбран такой провайдер."""
+    if _matches(user_text, TRADE_ACTION_PATTERNS):
+        return "торговое действие"
+    if _matches(user_text, TRADING_PATTERNS):
+        return "трейдинг"
     if _matches(user_text, WEB_SEARCH_PATTERNS):
         return "web_search"
     if _matches(user_text, VISION_PATTERNS):

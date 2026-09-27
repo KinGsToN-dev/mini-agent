@@ -21,12 +21,26 @@ def pick_model_key(user_text: str, catalog_keys: list, exhausted: set) -> str | 
     # Проверяем, трейдинг ли это
     import re
     TRADING_KEYWORDS = [
+        # Брифинг и анализ
         r"\bбрифинг\b", r"\bанализ\s+(рынка|цены|пары)",
         r"\bчто\s+с\s+(ценой|рынком|парой|золотом|биткоином)",
         r"\bкотировк", r"\bсигнал\s+(на|по)",
+        # Символы
         r"\bXAUUSD\b", r"\bBTCUSD\b", r"\bEURUSD\b", r"\bGBPUSD\b",
         r"\bзолото\b", r"\bбиткоин\b",
+        # Telegram
         r"\bотправь.*телеграм",
+        # ТОРГОВЫЕ ДЕЙСТВИЯ (для tool-chains)
+        r"\b(купи|продай|открой|закрой|открыть|закрыть)\b",
+        r"\b(buy|sell|open|close)\s+\d",
+        r"\bBUY\b", r"\bSELL\b",
+        r"\b(lot|лота|лотов|объём|объем)\s+\d",
+        r"\d+\.\d+\s+(BTCUSD|XAUUSD|EURUSD|GBPUSD)",
+        r"\b(BTCUSD|XAUUSD|EURUSD|GBPUSD)\s+(BUY|SELL)",
+        r"\b(SL|TP|стоп|тейк)\s+\d",
+        r"\bпозици",
+        r"\bордер\b",
+        r"\bзакрыть\s+вс[её]",
     ]
     t = user_text.lower()
     is_trading = any(re.search(p, t) for p in TRADING_KEYWORDS)

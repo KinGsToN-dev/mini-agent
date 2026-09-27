@@ -7,6 +7,12 @@ from rich.table import Table
 
 from config import MODEL_CATALOG
 from tools.shell import set_mode, get_mode
+from tools.mt5_trade import (
+    get_config_status,
+    set_max_lot,
+    set_allow_live,
+    set_confirm_required,
+)
 from agent import sessions as sessions_mod
 from agent import analytics as analytics_mod
 from agent import exporter as exporter_mod
@@ -58,6 +64,10 @@ HELP_TEXT = """[bold]Команды:[/bold]
   /find <текст>    — поиск по всем сообщениям сессий
   /forget          — сбросить кэш исчерпанных моделей
   /clear           — очистить экран
+  /trade           — статус торговых настроек MT5
+  /confirm on|off  — подтверждение торговых операций
+  /limit <value>   — лимит объёма в лотах
+  /live on|off     — разрешить торговлю на LIVE-аккаунте
   /exit, /quit     — выход (автосохранение последней сессии)
 
 [bold]Режимы безопасности:[/bold]
@@ -293,6 +303,64 @@ def handle_command(user_input: str, agent) -> bool:
 
     if user_input == "/forget":
         agent.forget_exhausted()
+        return True
+
+    if user_input == "/trade":
+        console.print("[bold]Торговые настройки MT5:[/bold]")
+        console.print(get_config_status())
+        console.print()
+        console.print("[dim]Пример: 'купи 0.01 BTCUSD с SL 84000 и TP 86000'[/dim]")
+        return True
+
+    if user_input.startswith("/confirm"):
+        parts = user_input.split(maxsplit=1)
+        if len(parts) == 1:
+            lines = get_config_status().split("\n")
+            console.print(f"[cyan]{lines[2] if len(lines) > 2 else '?'}[/cyan]")
+        else:
+            arg = parts[1].strip().lower()
+            if arg in ("on", "yes", "true", "вкл", "включить"):
+                set_confirm_required(True)
+                console.print("[green]Подтверждение: ВКЛ[/green]")
+            elif arg in ("off", "no", "false", "выкл", "выключить"):
+                set_confirm_required(False)
+                console.print("[yellow]Подтверждение: ВЫКЛ (ордера сразу!)[/yellow]")
+            else:
+                console.print("[red]Использование: /confirm on | /confirm off[/red]")
+        return True
+
+    if user_input.startswith("/limit"):
+        parts = user_input.split(maxsplit=1)
+        if len(parts) == 1:
+            lines = get_config_status().split("\n")
+            console.print(f"[cyan]{lines[0] if len(lines) > 0 else '?'}[/cyan]")
+        else:
+            try:
+                value = float(parts[1].strip())
+                if value <= 0:
+                    console.print("[red]Лимит должен быть > 0[/red]")
+                else:
+                    set_max_lot(value)
+                    console.print(f"[green]MAX_LOT: {value}[/green]")
+            except ValueError:
+                console.print("[red]Использование: /limit <число>[/red]")
+        return True
+
+    if user_input.startswith("/live"):
+        parts = user_input.split(maxsplit=1)
+        if len(parts) == 1:
+            lines = get_config_status().split("\n")
+            console.print(f"[cyan]{lines[1] if len(lines) > 1 else '?'}[/cyan]")
+        else:
+            arg = parts[1].strip().lower()
+            if arg in ("on", "yes", "true", "вкл", "включить"):
+                set_allow_live(True)
+                console.print("[red]LIVE-торговля РАЗРЕШЕНА![/red]")
+            elif arg in ("off", "no", "false", "выкл", "выключить"):
+                set_allow_live(False)
+                console.print("[green]LIVE-торговля заблокирована[/green]")
+            else:
+                console.print("[red]Использование: /live on | /live off[/red]")
         return True
 
     if user_input.startswith("/history"):
