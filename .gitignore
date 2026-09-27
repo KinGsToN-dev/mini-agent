@@ -41,3 +41,6 @@ screenshot.png
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Vision test scripts
+test_vision_*.py
