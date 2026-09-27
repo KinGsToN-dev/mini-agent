@@ -57,3 +57,5 @@ _clean_*.py
 # Debug dumps
 *_debug.txt
 project_dump.txt
+*_dump.txt
+*.dump
