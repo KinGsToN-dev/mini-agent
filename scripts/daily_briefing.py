@@ -190,37 +190,69 @@ def analyze_with_groq(data: str) -> str:
 # ============================================================
 # Main
 # ============================================================
+# ============================================================
+# Логирование
+# ============================================================
+from pathlib import Path as _Path
+LOG_FILE = _Path(__file__).parent.parent / "briefing.log"
+
+
+def log(msg: str):
+    """Пишет в лог с timestamp."""
+    from datetime import datetime as _dt
+    ts = _dt.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"[{ts}] {msg}"
+    print(line)
+    try:
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except Exception:
+        pass
+
+
 def main():
-    print("=" * 60)
-    print("УТРЕННИЙ БРИФИНГ")
-    print("=" * 60)
+    log("=" * 60)
+    log("УТРЕННИЙ БРИФИНГ — старт")
+    log("=" * 60)
+
+    total_start = time.time()
 
     # 1. Сбор данных
-    print("\n[1/3] Сбор данных...")
+    log("[1/3] Сбор данных...")
     t0 = time.time()
-    data = collect_data()
-    print(f"      OK ({time.time()-t0:.1f}с, {len(data)} символов)")
+    try:
+        data = collect_data()
+        log(f"      OK ({time.time()-t0:.1f}с, {len(data)} символов)")
+    except Exception as e:
+        log(f"      ОШИБКА: {type(e).__name__}: {e}")
+        log("БРИФИНГ ПРЕРВАН")
+        return
 
     # 2. Анализ через Groq
-    print("\n[2/3] Анализ через Groq...")
+    log("[2/3] Анализ через Groq...")
     t0 = time.time()
-    briefing = analyze_with_groq(data)
-    print(f"      OK ({time.time()-t0:.1f}с, {len(briefing)} символов)")
+    try:
+        briefing = analyze_with_groq(data)
+        log(f"      OK ({time.time()-t0:.1f}с, {len(briefing)} символов)")
+    except Exception as e:
+        log(f"      ОШИБКА: {type(e).__name__}: {e}")
+        log("БРИФИНГ ПРЕРВАН")
+        return
 
     # 3. Отправка в Telegram
-    print("\n[3/3] Отправка в Telegram...")
+    log("[3/3] Отправка в Telegram...")
     t0 = time.time()
-    result = telegram_send(briefing, title=TITLE)
-    print(f"      {result} ({time.time()-t0:.1f}с)")
+    try:
+        result = telegram_send(briefing, title=TITLE)
+        log(f"      {result} ({time.time()-t0:.1f}с)")
+    except Exception as e:
+        log(f"      ОШИБКА: {type(e).__name__}: {e}")
+        log("БРИФИНГ ПРЕРВАН")
+        return
 
-    print()
-    print("=" * 60)
-    print("ГОТОВО")
-    print("=" * 60)
-    print()
-    print("Превью брифинга (первые 500 символов):")
-    print(briefing[:500])
-    print("...")
+    log("=" * 60)
+    log(f"ГОТОВО (общее время: {time.time()-total_start:.1f}с)")
+    log("=" * 60)
 
 
 if __name__ == "__main__":
