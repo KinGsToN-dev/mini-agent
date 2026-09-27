@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Secrets
+.env
+*.key
+
+# User sessions
+sessions/*.json
+sessions/*.jsonl
+sessions/_last.json
+
+# Cache and logs
+agent.log
+agent_state.json
+
+# Agent artifacts
+screenshot_*.png
+screen_analysis.png
+error_check.png
+screenshot.png
+
+# Temp files
+test_*.py
+debug_*.py
+temp_*
+tmp*
+_mistral_raw.txt
+
+# IDE
+.vscode/
+.idea/
