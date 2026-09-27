@@ -6,3 +6,11 @@
 [2026-09-27 14:00:52] ORDER_CANCELLED: {"symbol": "BTCUSD", "side": "BUY", "volume": 0.01, "price": 85027.06, "sl": null, "tp": null, "account": 239920, "account_mode": "DEMO"}
 [2026-09-27 14:01:17] ORDER_FAILED: {"symbol": "BTCUSD", "side": "BUY", "volume": 0.01, "price": 85030.5, "sl": null, "tp": null, "account": 239920, "account_mode": "DEMO", "error": "[ERROR] order_send вернул None. Last error: (-2, 'Invalid \"comment\" argument')"}
 [2026-09-27 14:01:22] ORDER_SUCCESS: {"symbol": "BTCUSD", "side": "BUY", "volume": 0.01, "price": 85026.6, "sl": null, "tp": null, "account": 239920, "account_mode": "DEMO", "ticket": 156280658, "deal": 16375613, "retcode": 10009}
+[2026-09-27 14:10:28] ORDER_SUCCESS: {"symbol": "BTCUSD", "side": "BUY", "volume": 0.01, "price": 85026.5, "sl": 84000, "tp": 86000, "account": 239920, "account_mode": "DEMO", "ticket": 156280673, "deal": 16375632, "retcode": 10009}
+[2026-09-27 14:18:58] ORDER_SUCCESS: {"symbol": "BTCUSD", "side": "BUY", "volume": 0.01, "price": 84956.6, "sl": 84000, "tp": 86000, "account": 239920, "account_mode": "DEMO", "ticket": 156280685, "deal": 16375638, "retcode": 10009}
+[2026-09-27 14:19:22] CLOSE_SUCCESS: {"ticket": 156280449, "symbol": "BTCUSD", "side": "BUY", "volume": 0.01, "price": 84897.73, "profit": -0.74, "order": 156280686}
+[2026-09-27 14:19:24] CLOSE_SUCCESS: {"ticket": 156280658, "symbol": "BTCUSD", "side": "BUY", "volume": 0.01, "price": 84897.74, "profit": -1.23, "order": 156280687}
+[2026-09-27 14:19:25] CLOSE_SUCCESS: {"ticket": 156280673, "symbol": "BTCUSD", "side": "BUY", "volume": 0.01, "price": 84897.66, "profit": -1.29, "order": 156280688}
+[2026-09-27 14:19:27] CLOSE_SUCCESS: {"ticket": 156280685, "symbol": "BTCUSD", "side": "BUY", "volume": 0.01, "price": 84897.65, "profit": -0.59, "order": 156280689}
+[2026-09-27 15:48:05] ORDER_SUCCESS: {"symbol": "BTCUSD", "side": "BUY", "volume": 0.01, "price": 84486.3, "sl": null, "tp": null, "account": 239920, "account_mode": "DEMO", "ticket": 156280911, "deal": 16375833, "retcode": 10009}
+[2026-09-27 15:49:10] MODIFY_SUCCESS: {"ticket": 156280911, "sl": 84000, "tp": 86000}

@@ -1,8 +1,11 @@
 ﻿"""Реестр провайдеров и управление текущим."""
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 from providers import groq as groq_mod
+from providers import openrouter as openrouter_mod
 from providers import mistral as mistral_mod
 
 _instances = {}
@@ -27,6 +30,13 @@ def get_provider(name: str):
         _instances[name] = mistral_mod.create(api_key)
         return _instances[name]
 
+    if name == "openrouter":
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            raise RuntimeError("OPENROUTER_API_KEY не найден в .env")
+        _instances[name] = openrouter_mod.create(api_key)
+        return _instances[name]
+
     if name == "gemini":
         # Gemini обрабатывается отдельно в agent/core.py
         return None
@@ -43,4 +53,6 @@ def available_providers() -> list:
         result.append("groq")
     if os.getenv("MISTRAL_API_KEY"):
         result.append("mistral")
+    if os.getenv("OPENROUTER_API_KEY"):
+        result.append("openrouter")
     return result

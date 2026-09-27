@@ -64,6 +64,8 @@ HELP_TEXT = """[bold]Команды:[/bold]
   /find <текст>    — поиск по всем сообщениям сессий
   /forget          — сбросить кэш исчерпанных моделей
   /clear           — очистить экран
+  /call <tool> <json> — вызвать инструмент вручную (обход LLM)
+  /tools           — список всех инструментов
   /trade           — статус торговых настроек MT5
   /confirm on|off  — подтверждение торговых операций
   /limit <value>   — лимит объёма в лотах
@@ -310,6 +312,43 @@ def handle_command(user_input: str, agent) -> bool:
         console.print(get_config_status())
         console.print()
         console.print("[dim]Пример: 'купи 0.01 BTCUSD с SL 84000 и TP 86000'[/dim]")
+        return True
+
+    if user_input.startswith("/call"):
+        import json as _json
+        from tools.registry import execute_tool, TOOL_FUNCTIONS
+
+        parts = user_input.split(maxsplit=2)
+        if len(parts) < 2:
+            console.print("[yellow]Использование: /call <tool> <json>[/yellow]")
+            console.print("[dim]Пример: /call mt5_quote {\"symbol\": \"BTCUSD\"}[/dim]")
+            console.print(f"[dim]Доступные tools ({len(TOOL_FUNCTIONS)}):[/dim]")
+            tools_list = ", ".join(sorted(TOOL_FUNCTIONS.keys()))
+            console.print(f"[dim]{tools_list}[/dim]")
+            return True
+
+        tool_name = parts[1].strip()
+        if tool_name not in TOOL_FUNCTIONS:
+            console.print(f"[red]Инструмент не найден: {tool_name}[/red]")
+            return True
+
+        # Парсим JSON-аргументы
+        if len(parts) < 3:
+            args = {}
+        else:
+            try:
+                args = _json.loads(parts[2])
+            except _json.JSONDecodeError as e:
+                console.print(f"[red]Ошибка JSON: {e}[/red]")
+                return True
+
+        try:
+            console.print(f"[dim]→ {tool_name}({args})[/dim]")
+            result = execute_tool(tool_name, args)
+            console.print(f"[bold green]Результат:[/bold green]")
+            console.print(result)
+        except Exception as e:
+            console.print(f"[red]Ошибка вызова: {e}[/red]")
         return True
 
     if user_input.startswith("/confirm"):

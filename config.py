@@ -34,7 +34,7 @@ TRADING_INSTRUCTIONS = """
 SYSTEM_PROMPT = (
     "Ты — мини-агент в терминале Windows пользователя. "
     "\n\n"
-    "У тебя есть 20 инструментов:\n"
+    "У тебя есть 25 инструментов:\n"
     "\n"
     "ФАЙЛЫ И SHELL:\n"
     "  run_shell, read_file, write_file, list_dir, grep\n"
@@ -45,9 +45,14 @@ SYSTEM_PROMPT = (
     "ИНТЕРНЕТ:\n"
     "  http_get, web_search\n"
     "\n"
-    "MT5 (MetaTrader 5):\n"
-    "  mt5_quote (котировка), mt5_bars (свечи), mt5_summary (сводка с MA+RSI),\n"
+    "MT5 — чтение:\n"
+    "  mt5_quote (котировка), mt5_bars (свечи), mt5_summary (сводка MA+RSI),\n"
     "  mt5_account (баланс), mt5_positions (позиции)\n"
+    "\n"
+    "MT5 — ТОРГОВЛЯ:\n"
+    "  mt5_order (открыть позицию), mt5_close (закрыть по ticket),\n"
+    "  mt5_close_all (закрыть всё), mt5_modify (изменить SL/TP),\n"
+    "  mt5_pending (отложенный ордер)\n"
     "\n"
     "НОВОСТИ:\n"
     "  econ_calendar (экономический календарь)\n"
@@ -66,6 +71,24 @@ SYSTEM_PROMPT = (
     "   ОБЯЗАТЕЛЬНО вызывай telegram_send с параметрами message и title.\n"
     "   Не пиши 'вот текст, скопируйте' — а РЕАЛЬНО вызывай telegram_send.\n"
     "7. Если команда заблокирована — не пытайся обойти защиту.\n"
+    "\n"
+    "ТОРГОВЫЕ КОМАНДЫ — КРИТИЧНО ВАЖНО:\n"
+    "Если пользователь просит 'купи', 'продай', 'открой', 'закрой', 'buy', 'sell',\n"
+    "'закрой позицию', 'закрой все' — ТЫ ОБЯЗАН СРАЗУ вызвать инструмент:\n"
+    "  - 'купи X BTCUSD'      → mt5_order(symbol='BTCUSD', side='BUY', volume=X)\n"
+    "  - 'продай X BTCUSD'    → mt5_order(symbol='BTCUSD', side='SELL', volume=X)\n"
+    "  - 'закрой 123456'      → mt5_close(ticket=123456)\n"
+    "  - 'закрой все'         → mt5_close_all()\n"
+    "  - 'поставь SL/TP'      → mt5_modify(ticket=..., sl=..., tp=...)\n"
+    "\n"
+    "ЗАПРЕЩЕНО при торговых командах:\n"
+    "  - Собирать данные через mt5_account, mt5_positions, mt5_quote ПЕРЕД ордером\n"
+    "  - Писать 'подтвердите ордер' — вместо этого ВЫЗЫВАЙ mt5_order\n"
+    "  - Спрашивать 'да/нет' — callback САМ покажет панель YES/no\n"
+    "\n"
+    "ПРАВИЛЬНО: получил 'купи 0.01 BTCUSD' → СРАЗУ mt5_order(symbol='BTCUSD',\n"
+    "side='BUY', volume=0.01). Callback подтверждения сам покажет детали и\n"
+    "спросит YES/no. Ты НЕ пишешь 'подтвердите' — это делает callback.\n"
     "\n"
     "Отвечай кратко, объясняй что делаешь."
 )
@@ -90,13 +113,47 @@ PROVIDER_CATALOG = {
         ("small",     "mistral-small-latest",  "требует data-training"),
         ("nemo",      "open-mistral-nemo",     "может не работать"),
     ],
+     "openrouter": [
+        ("llama-3.3-70b", "meta-llama/llama-3.3-70b-instruct:free", "умная, tools"),
+        ("deepseek-r1",   "deepseek/deepseek-r1:free",              "reasoning, tools"),
+        ("qwen-72b",      "qwen/qwen-2.5-72b-instruct:free",        "средняя, tools"),
+        ("qwen-coder",    "qwen/qwen3-coder:free",                  "для кода"),
+        ("nemotron-120b", "nvidia/nemotron-3-super-120b-a12b:free", "умная, tools"),
+        ("gpt-oss-120b",  "openai/gpt-oss-120b:free",               "OpenAI GPT-OSS 120B"),
+        ("gpt-oss-20b",   "openai/gpt-oss-20b:free",                "быстрая, tools"),
+        ("gemma-31b",     "google/gemma-4-31b-it:free",             "Google Gemma 4"),
+        ("free-router",   "openrouter/free",                        "авто-выбор любой free модели"),
+    ],
 }
 
 PROVIDER_DEFAULT_MODEL = {
     "gemini":  "lite-3.5",
-    "groq":    "gpt-oss-20b",       # qwen не имеет встроенных tools
+    "groq":    "gpt-oss-20b",
     "mistral": "codestral",
+    "openrouter": "llama-3.3-70b",
 }
 
+# OpenRouter — free-модели с tool-calling
+OPENROUTER_MODELS = [
+    ("llama-3.3-70b", "meta-llama/llama-3.3-70b-instruct:free", "умная, tools"),
+    ("deepseek-r1", "deepseek/deepseek-r1:free", "reasoning, tools"),
+    ("qwen-72b", "qwen/qwen-2.5-72b-instruct:free", "средняя, tools"),
+    ("qwen-coder", "qwen/qwen3-coder:free", "для кода"),
+    ("nemotron-120b", "nvidia/nemotron-3-super-120b-a12b:free", "умная, tools"),
+    ("gpt-oss-120b", "openai/gpt-oss-120b:free", "OpenAI GPT-OSS 120B"),
+    ("gpt-oss-20b", "openai/gpt-oss-20b:free", "быстрая, tools"),
+    ("gemma-31b", "google/gemma-4-31b-it:free", "Google Gemma 4"),
+    ("free-router", "openrouter/free", "авто-выбор любой free модели"),
+]
+
+# Fallback-цепочка при 429
+OPENROUTER_FALLBACKS = [
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "deepseek/deepseek-r1:free",
+    "openrouter/free",
+]
+
+
+
 # --- Роутер провайдеров ------------------------------------------------
-ROUTER_ENABLED_DEFAULT = True
+ROUTER_ENABLED_DEFAULT = False
