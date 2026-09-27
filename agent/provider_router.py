@@ -1,4 +1,4 @@
-﻿"""Автоматический выбор провайдера под задачу.
+"""Автоматический выбор провайдера под задачу.
 
 Vision → Gemini
 Код → Mistral
@@ -23,6 +23,22 @@ WEB_SEARCH_PATTERNS = [
     r"\bsearch\b.*\b(web|internet|online)\b",
     r"\bgoogle\b.*\bfor\b",
     r"\bfind online\b",
+]
+
+# Трейдинг — Gemini (грамотный русский, точный анализ)
+TRADING_PATTERNS = [
+    r"\bбрифинг\b",
+    r"\bанализ\s+(рынка|цены|пары|символа)",
+    r"\bчто\s+с\s+(ценой|рынком|парой)",
+    r"\bпосмотри\s+(цену|котировк|график)",
+    r"\bпроанализируй\s+(цену|рынок|символ|XAU|BTC|EUR|GBP|USD)",
+    r"\bкотировк",
+    r"\bсигнал\s+(на|по)",
+    r"\b(покупка|продажа|лонг|шорт)\b",
+    r"\bXAUUSD\b", r"\bBTCUSD\b", r"\bEURUSD\b", r"\bGBPUSD\b",
+    r"\bзолото\b", r"\bбиткоин\b", r"\bбиткойн\b",
+    r"\bчто\s+с\s+\w+",
+    r"\bкак\s+дела\s+с\b",
 ]
 
 # Vision — нужен Gemini (он один умеет картинки)
@@ -92,6 +108,14 @@ def pick_provider(user_text: str, available: list,
     Возвращает имя провайдера для запроса или None (если не решил).
     available — список доступных провайдеров из registry.
     """
+    # Трейдинг — Gemini (грамотный русский)
+    if _matches(user_text, TRADING_PATTERNS):
+        if "gemini" in available:
+            return "gemini"
+        if "groq" in available:
+            return "groq"
+        return None
+
     # Web search — Gemini (надёжнее: без проблем с tools и лимитами)
     if _matches(user_text, WEB_SEARCH_PATTERNS):
         if "gemini" in available:

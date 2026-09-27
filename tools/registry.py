@@ -11,7 +11,7 @@ from .clipboard import clipboard
 from .notify import notify
 from .pyexec import python_exec
 from .web_search import web_search
-from .mt5_tools import mt5_quote, mt5_bars, mt5_account, mt5_positions
+from .mt5_tools import mt5_quote, mt5_bars, mt5_account, mt5_positions, mt5_summary
 from .news_tools import econ_calendar
 from .telegram_tools import telegram_send
 
@@ -211,6 +211,17 @@ TOOL_SCHEMAS = [
         },
     },
     {
+        "type": "function", "name": "mt5_summary",
+        "description": "Сводка по символу: цена, изменение 24ч, диапазон, MA(20), MA(50), RSI(14), тренд. Идеально для брифингов.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "symbol": {"type": "string", "description": "EURUSD, XAUUSD, BTCUSD..."},
+            },
+            "required": ["symbol"],
+        },
+    },
+    {
         "type": "function", "name": "mt5_account",
         "description": "Информация об аккаунте MT5: баланс, equity, маржа.",
         "parameters": {"type": "object", "properties": {}},
@@ -234,7 +245,7 @@ TOOL_SCHEMAS = [
     },
     {
         "type": "function", "name": "telegram_send",
-        "description": "Отправить сообщение в Telegram.",
+        "description": "Отправить сообщение в Telegram (chat_id из .env). ВАЖНО: используй ТОЛЬКО имя 'telegram_send'. НЕ пиши текст для копирования — РЕАЛЬНО вызывай этот инструмент. Параметры: message (обязательно), title (опционально, будет жирным). Пример: telegram_send(message='Утренний брифинг BTCUSD: цена $84,880...', title='BTCUSD Briefing').",
         "parameters": {
             "type": "object",
             "properties": {
@@ -262,6 +273,7 @@ TOOL_FUNCTIONS = {
     "python_exec": python_exec,
     "web_search": web_search,
     "mt5_quote": mt5_quote,
+    "mt5_summary": mt5_summary,
     "mt5_bars": mt5_bars,
     "mt5_account": mt5_account,
     "mt5_positions": mt5_positions,
@@ -270,10 +282,62 @@ TOOL_FUNCTIONS = {
 }
 
 
+# Алиасы для инструментов — модель иногда путает имена
+TOOL_ALIASES = {
+    # Telegram
+    "send_telegram_message": "telegram_send",
+    "send_telegram": "telegram_send",
+    "telegram": "telegram_send",
+    "send_message": "telegram_send",
+    "tg_send": "telegram_send",
+    "notify_telegram": "telegram_send",
+    # Web
+    "search_web": "web_search",
+    "google_search": "web_search",
+    "search": "web_search",
+    # MT5
+    "get_quote": "mt5_quote",
+    "quote": "mt5_quote",
+    "get_bars": "mt5_bars",
+    "bars": "mt5_bars",
+    "get_account": "mt5_account",
+    "account": "mt5_account",
+    "get_positions": "mt5_positions",
+    "positions": "mt5_positions",
+    "summary": "mt5_summary",
+    "get_summary": "mt5_summary",
+    # News
+    "calendar": "econ_calendar",
+    "get_calendar": "econ_calendar",
+    "economic_calendar": "econ_calendar",
+    "news": "econ_calendar",
+    # Files
+    "read": "read_file",
+    "write": "write_file",
+    "ls": "list_dir",
+    "dir": "list_dir",
+    # Shell
+    "shell": "run_shell",
+    "exec_shell": "run_shell",
+    "bash": "run_shell",
+    # Python
+    "exec_python": "python_exec",
+    "py_exec": "python_exec",
+    "run_python": "python_exec",
+}
+
+
 def execute_tool(name: str, args: dict) -> str:
+    # Проверяем алиасы
+    if name in TOOL_ALIASES:
+        original = name
+        name = TOOL_ALIASES[name]
+        # Логируем (полезно для отладки)
+        # print(f"[alias] {original} -> {name}")
+    
     fn = TOOL_FUNCTIONS.get(name)
     if not fn:
-        return f"[ERROR] Неизвестный инструмент: {name}"
+        return f"[ERROR] Неизвестный инструмент: {name}. Доступные: {list(TOOL_FUNCTIONS.keys())}"
     try:
         return fn(**args)
     except TypeError as e:
