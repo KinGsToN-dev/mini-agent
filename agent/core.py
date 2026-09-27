@@ -13,6 +13,7 @@ from agent.state import load_exhausted, save_exhausted, clear_state
 from agent import history as history_mod
 from agent.router import classify, pick_model_key
 from agent import provider_router
+from agent import classifier
 from agent import analytics
 
 console = Console()
@@ -229,12 +230,21 @@ class GeminiAgent:
             try:
                 from providers import registry as _prov_reg
                 available = _prov_reg.available_providers()
-                target = provider_router.pick_provider(
-                    user_text, available, self.provider_name
-                )
-                if target and target != self.provider_name:
-                    reason = provider_router.describe_decision(user_text)
-                    console.print(f"[dim]🧭 роутер: {reason} → {target}[/dim]")
+                category, confidence, source = classifier.classify(user_text, available)
+                # Маппинг категории → провайдер
+                category_to_provider = {
+                    "trading": "groq",
+                    "vision": "gemini",
+                    "code": "mistral",
+                    "web_search": "groq",
+                    "general": "groq",
+                }
+                target = category_to_provider.get(category)
+                if target and target != self.provider_name and target in available:
+                    console.print(
+                        f"[dim]🧭 роутер: {category} → {target} "
+                        f"(conf={confidence:.2f}, {source})[/dim]"
+                    )
                     self.switch_provider(target)
             except Exception as _e:
                 # Не критично — если роутер упал, работаем как есть
