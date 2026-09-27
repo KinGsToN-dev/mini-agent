@@ -5,7 +5,6 @@ from rich.console import Console
 
 console = Console()
 
-
 def stream_interaction(client, kwargs):
     interaction_id = None
     text_parts = []
@@ -15,8 +14,15 @@ def stream_interaction(client, kwargs):
     stream = client.interactions.create(**kwargs)
 
     for event in stream:
+
         etype = getattr(event, "event_type", None)
 
+        # Обработка ошибок API
+        if etype == "error":
+            err = getattr(event, "error", None)
+            code = getattr(err, "code", "unknown") if err else "unknown"
+            msg = getattr(err, "message", str(err)) if err else "unknown error"
+            raise RuntimeError(f"{code}: {msg}")
         if etype == "interaction.created":
             interaction_id = getattr(event.interaction, "id", None)
 
@@ -35,7 +41,6 @@ def stream_interaction(client, kwargs):
             if not delta:
                 continue
             dtype = getattr(delta, "type", None)
-
             if dtype == "text":
                 chunk = getattr(delta, "text", "") or ""
                 if chunk:

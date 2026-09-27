@@ -13,14 +13,16 @@ def _record_fallback():
 def is_rate_limit(exc: Exception) -> bool:
     name = type(exc).__name__.lower()
     text = str(exc).lower()
-    return ("ratelimit" in name or "429" in text
-            or "rate limit" in text or "too many requests" in text)
+    return ("ratelimit" in name or "ratelimit" in text or "429" in text
+            or "rate limit" in text or "rate_limit" in text
+            or "too many requests" in text)
 
 
 def is_unavailable(exc: Exception) -> bool:
     name = type(exc).__name__.lower()
     text = str(exc).lower()
     return ("notfound" in name or "404" in text or "not_found" in text
+            or "not found" in text
             or "no longer available" in text)
 
 

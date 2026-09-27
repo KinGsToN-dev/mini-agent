@@ -1,135 +1,118 @@
-Порядок работы
-Начнём с одного файла — README.md. Если сработает — сделаем остальные.
+Mini-Agent — AI-трейдинг агент для терминала
+Мультипровайдерный AI-ассистент с 25 инструментами, торговлей MetaTrader 5,
+автоматическими брифингами в Telegram и авто-переключением между моделями.
 
-Шаг 1 — открой VS Code
-File → Open Folder → C:\projects\mini-agent
+Работает бесплатно на Free Tier 4 провайдеров LLM.
 
-Шаг 2 — удали старые файлы
-В левой панели удали:
+✨ Что умеет
+🧠 Мультипровайдер (4 источника)
+Провайдер	Модели	Квота Free	Скорость
+Gemini	lite-3.5, flash-3.5	1500/день, 20/день	3-20с
+Groq	gpt-oss-20b, 120b, qwen	14 400/день	1-2с
+Mistral	codestral	2000/день	2с
+OpenRouter	9 free-моделей	50/день + fallback	2-18с
+Авто-fallback: при 429/404 переключается на следующую модель.
 
-README.md (правой кнопкой → Delete)
+🎯 Умные роутеры
+Роутер провайдеров — трейдинг → Gemini, код → Mistral, общее → Groq
 
-commands.md
+Роутер моделей — flash-3.5 для торговли, lite-3.5 для остального
 
-ARCHITECTURE.md
+Fallback в OpenRouter — если Gemini недоступен, идёт в OpenRouter
 
-_make_docs.ps1
+🛠 25 инструментов
+Файлы и shell — run_shell, read_file, write_file, list_dir, grep
 
-Шаг 3 — создай новый README
-Правой кнопкой на папке MINI-AGENT → New File → имя README.md → Enter.
+Система — processes, screenshot, screenshot_analyze, clipboard, notify, python_exec
 
-Шаг 4 — вставь текст
-Скопируй ВЕСЬ текст ниже (начиная с # Mini-Agent и до последней строки):
+Интернет — http_get, web_search
 
-Mini-Agent — мультипровайдерный AI-агент для терминала
-Полноценный агент уровня Claude Desktop / Open Interpreter, работающий бесплатно на Free Tier трёх провайдеров LLM.
+MT5 чтение — mt5_quote, mt5_bars, mt5_summary, mt5_account, mt5_positions
 
-Возможности
-Мультипровайдер
-Gemini — vision, web_search, большая квота (1500/день на lite)
+MT5 торговля — mt5_order, mt5_close, mt5_close_all, mt5_modify, mt5_pending
 
-Groq — сверхбыстрый (0.5-1с), 14 400 запросов/день
+Новости — econ_calendar
 
-Mistral — Codestral для кода (2000/день)
+Telegram — telegram_send
 
-Переключение: /provider gemini|groq|mistral
+🔒 Безопасность
+Whitelist безопасных команд (dir, type, python --version)
 
-Автоматический роутер
-Сам выбирает провайдера под задачу
+Blacklist запрещённых (format, mkfs, reg delete, rm -rf)
 
-vision → Gemini, код → Mistral, web_search → Gemini+Tavily, остальное → Groq
+Опасные команды (del /s, rmdir /s) — подтверждение всегда
 
-Управление: /router on|off
+3 режима: ask / auto / dry
 
-13 инструментов
-Инструмент	Назначение
-run_shell	команды терминала (cmd)
-read_file	чтение файлов
-write_file	запись файлов
-list_dir	структура папок
-grep	поиск по файлам (regex)
-processes	список/kill процессов
-screenshot	скриншот экрана
-screenshot_analyze	vision — описание экрана через Gemini
-http_get	чтение веб-страниц
-clipboard	буфер обмена
-notify	Windows-уведомления
-python_exec	Python-песочница
-web_search	поиск в интернете через Tavily
-Безопасность
-Whitelist безопасных команд
+💾 Торговля с тройной защитой
+Demo-first — live-аккаунт заблокирован по умолчанию
 
-Blacklist запрещённых (format, mkfs, reg delete)
+Лимит — не более 0.1 лота за раз
 
-Опасные команды (del /s, rm -rf) — подтверждение всегда
+Callback подтверждения — панель YES/no перед операцией
 
-Защита от команд без слэша
+Логирование — все ордера в trades.log
 
-3 режима: ask (по умолчанию) / auto / dry
+📅 Автоматизация
+🌅 Утренний брифинг — 04:00 GMT+5
 
-Память и сессии
-Локальное хранилище сообщений (JSONL)
+☀️ Дневной брифинг — 17:00 GMT+5
 
-/save, /load, /sessions, /delete, /rename, /history, /find
+🌆 Вечерний брифинг — 18:30 GMT+5
 
-Экспорт в Markdown
+💼 Мониторинг позиций — каждый час
 
-Кэш исчерпанных моделей между запусками
+Все брифинги приходят в Telegram.
 
-UX
-Стриминг ответов Gemini
-
-Таймеры на каждом шаге
-
-Красивые панели tool calls
-
-Analytics: /stats
-
-Установка
+🚀 Быстрый старт
+powershell
 cd C:\projects\mini-agent
-
 python -m venv .venv
-
 .\.venv\Scripts\Activate.ps1
-
 pip install -r requirements.txt
-
 Copy-Item .env.example .env
-
-Заполнить ключи в .env
-
+notepad .env
 .\run.bat
-
-Где получить ключи
-Провайдер	Где получить	Лимит Free Tier
-Gemini	https://aistudio.google.com/apikey	1500/день (lite), 20/день (flash)
+🔑 Ключи API
+Провайдер	Где получить	Free Tier
+Gemini	https://aistudio.google.com/apikey	1500/день
 Groq	https://console.groq.com/keys	14 400/день
-Mistral	https://console.mistral.ai/api-keys	2000/день (codestral)
+Mistral	https://console.mistral.ai/api-keys	2000/день
+OpenRouter	https://openrouter.ai/keys	50/день
 Tavily	https://tavily.com	1000/мес
-Быстрый старт
+💬 Примеры
 text
-> привет                          → Groq, 0.66с
-> напиши функцию quicksort        → Mistral, 1.14с, полный код
-> что на экране?                  → Gemini, vision
-> найди в интернете Python 3.13   → Gemini + Tavily
-> что в папке?                    → Groq, tool-calling
-Документация
-commands.md — шпаргалка всех команд
+> сделай утренний брифинг по BTCUSD и отправь в телеграм
+> купи 0.01 BTCUSD с SL 84000 и TP 86000
+> закрой все позиции
+> что на экране?
+> найди в интернете свежие новости про BTC
+> напиши функцию quicksort
+📚 Документация
+docs/PROVIDERS.md — провайдеры и модели
 
-ARCHITECTURE.md — как устроен проект
+docs/TOOLS.md — 25 инструментов
 
-/help внутри агента
+docs/COMMANDS.md — команды REPL
 
-Принципы
-Бесплатно — работает на Free Tier
+docs/AUTOMATION.md — Task Scheduler
 
-Безопасно — whitelist + blacklist + подтверждения
+🧪 Тесты
+powershell
+.\.venv\Scripts\python.exe -m pytest tests/unit/ -q
+248 тестов на 3 версиях Python.
 
-Локально — сессии, история, логи на диске
+🎯 Принципы
+Бесплатно — Free Tier 4 провайдеров
 
-Расширяемо — новый инструмент = 1 файл + регистрация
+Безопасно — whitelist/blacklist + demo-first
 
-Мультипровайдер — 3 источника с fallback
+Локально — сессии, логи на диске
 
-Лицензия
+Расширяемо — новый tool = 1 файл + регистрация
+
+Мультипровайдер — авто-fallback между 4 источниками
+
+📜 Лицензия
 Личное использование.
+

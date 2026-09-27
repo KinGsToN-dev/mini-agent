@@ -44,3 +44,16 @@ htmlcov/
 
 # Vision test scripts
 test_vision_*.py
+
+# Backups
+*.bak_*
+*.bak2_*
+*.bak3_*
+
+# Patch scripts
+_patch_*.py
+_clean_*.py
+
+# Debug dumps
+*_debug.txt
+project_dump.txt

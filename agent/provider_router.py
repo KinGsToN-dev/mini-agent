@@ -47,6 +47,8 @@ WEB_SEARCH_PATTERNS = [
 TRADING_PATTERNS = [
     r"\bбрифинг\b",
     r"\bанализ\s+(рынка|цены|пары|символа)",
+    r"\bанализ\b.*\b(золот|золото|xauusd|биткоин|btcusd|eurusd|gbpusd|нефт|серебр)",
+    r"\b(золот|золото|xauusd|биткоин|btcusd|eurusd|gbpusd)",
     r"\bчто\s+с\s+(ценой|рынком|парой)",
     r"\bпосмотри\s+(цену|котировк|график)",
     r"\bпроанализируй\s+(цену|рынок|символ|XAU|BTC|EUR|GBP|USD)",
@@ -126,16 +128,16 @@ def pick_provider(user_text: str, available: list,
     Возвращает имя провайдера для запроса или None (если не решил).
     available — список доступных провайдеров из registry.
     """
-    # Торговые действия — ПЕРВЫМИ
+    # Торговые действия — ПЕРВЫМИ (Groq быстрый и умеет tools)
     if _matches(user_text, TRADE_ACTION_PATTERNS):
-        for p in ("gemini", "openrouter", "groq"):
+        for p in ("groq", "gemini", "openrouter"):
             if p in available:
                 return p
         return None
 
     # Трейдинг — Gemini (брифинг, анализ цены)
     if _matches(user_text, TRADING_PATTERNS):
-        for p in ("gemini", "openrouter", "groq"):
+        for p in ("groq", "gemini", "openrouter"):
             if p in available:
                 return p
         return None

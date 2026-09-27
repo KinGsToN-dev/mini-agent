@@ -75,7 +75,7 @@ class TestAnalyzeWithGroq:
         mock_provider.ask.return_value = "анализ текста"
 
         with patch("providers.registry.get_provider", return_value=mock_provider):
-            result = daily_briefing.analyze_with_groq("test data")
+            result = daily_briefing.analyze_with_groq("test data", mode="daily")
 
         assert result == "анализ текста"
         mock_provider.ask.assert_called_once()
@@ -84,6 +84,6 @@ class TestAnalyzeWithGroq:
     def test_analyze_handles_error(self):
         with patch("providers.registry.get_provider",
                    side_effect=Exception("No Groq")):
-            result = daily_briefing.analyze_with_groq("test data")
+            result = daily_briefing.analyze_with_groq("test data", mode="daily")
         # Не падает — возвращает error + data
         assert "ERROR" in result or "test data" in result
