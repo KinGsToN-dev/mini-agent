@@ -1,12 +1,12 @@
-# LLM SDK
+﻿# LLM SDK
 google-genai>=2.25.0
 openai>=1.50.0
 
-# Утилиты
+# РЈС‚РёР»РёС‚С‹
 python-dotenv>=1.0.0
 rich>=13.7.0
 
-# Инструменты
+# РРЅСЃС‚СЂСѓРјРµРЅС‚С‹
 pillow>=10.0.0
 psutil>=5.9.0
 pyperclip>=1.8.2
@@ -15,5 +15,9 @@ plyer>=2.1.0
 # HTTP
 httpx>=0.27.0
 
-# NumPy (для MT5)
+# NumPy (РґР»СЏ MT5)
 numpy>=1.24.0
+
+# HTTP server (REST API)
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
