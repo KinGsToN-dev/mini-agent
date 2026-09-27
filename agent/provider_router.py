@@ -107,18 +107,18 @@ def pick_provider(user_text: str, available: list,
         # Если Gemini нет — отдадим как есть
         return None
 
-    # Код — Mistral (если есть)
-    if _matches(user_text, CODE_PATTERNS):
-        if "mistral" in available:
-            return "mistral"
+    # Аналитика — Gemini (ДО кода: "проанализируй код" = анализ)
+    if _matches(user_text, ANALYSIS_PATTERNS):
+        if "gemini" in available:
+            return "gemini"
         if "groq" in available:
             return "groq"
         return None
 
-    # Аналитика — Gemini (если есть)
-    if _matches(user_text, ANALYSIS_PATTERNS):
-        if "gemini" in available:
-            return "gemini"
+    # Код — Mistral (если есть)
+    if _matches(user_text, CODE_PATTERNS):
+        if "mistral" in available:
+            return "mistral"
         if "groq" in available:
             return "groq"
         return None
@@ -137,8 +137,8 @@ def describe_decision(user_text: str) -> str:
         return "web_search"
     if _matches(user_text, VISION_PATTERNS):
         return "vision"
-    if _matches(user_text, CODE_PATTERNS):
-        return "код"
     if _matches(user_text, ANALYSIS_PATTERNS):
         return "анализ"
+    if _matches(user_text, CODE_PATTERNS):
+        return "код"
     return "общее"
