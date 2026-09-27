@@ -9,14 +9,16 @@ TIMEOUT_SECONDS = 30
 LOG_FILE = "agent.log"
 
 # Команды, запрещённые навсегда (даже с подтверждением)
+# Команды, запрещённые навсегда (даже с подтверждением)
 BLOCKED_PATTERNS = [
     # Форматирование / низкоуровневые операции
     r"\bformat\b", r"\bmkfs\b", r"\bdd\s+if=", r":\(\)\s*\{",
     r"\bshutdown\b", r"\breboot\b", r"\bdiskpart\b",
 
     # Рекурсивное удаление с корня или пользовательских папок
-    r"\bdel\s+/[sq].*\s+[a-zA-Z]:\\?(\s|$)",
-    r"\brmdir\s+/[sq].*\s+[a-zA-Z]:\\?(\s|$)",
+    # Ловим и "C:\" в конце, и "C:\*", и "C:\Windows"
+    r"\bdel\s+/[sq].*[a-zA-Z]:\\",
+    r"\brmdir\s+/[sq].*[a-zA-Z]:\\",
     r"\brm\s+-rf\s+/", r"\brm\s+-rf\s+~",
 
     # PowerShell-эквиваленты рекурсивного удаления
@@ -32,7 +34,6 @@ BLOCKED_PATTERNS = [
     r"\bdel\s+/s\s+/q\s+\*\.",
     r"\bdel\s+/q\s+/s\s+\*\.",
 ]
-
 # Паттерны, требующие ДОПОЛНИТЕЛЬНОГО подтверждения (даже в auto-режиме)
 DANGEROUS_PATTERNS = [
     r"\bdel\s+/[sq]",         # удаление с ключами

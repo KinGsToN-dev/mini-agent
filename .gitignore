@@ -29,12 +29,15 @@ error_check.png
 screenshot.png
 
 # Temp files
-test_*.py
-debug_*.py
-temp_*
-tmp*
-_mistral_raw.txt
+/temp_*.py
+/debug_*.py
+/tmp*
+/_mistral_raw.txt
 
 # IDE
 .vscode/
 .idea/
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
