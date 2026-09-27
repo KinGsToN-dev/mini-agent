@@ -32,13 +32,31 @@ TASKS = {
     "briefing": {
         "name": "Mini-Agent Morning Briefing",
         "script": "daily_briefing.py",
+        "script_args": ["--mode", "daily"],
         "default_time": "04:00",
         "default_interval": "daily",
-        "description": "Утренний брифинг",
+        "description": "Утренний брифинг (перед азиатской сессией)",
+    },
+    "midday": {
+        "name": "Mini-Agent Midday Briefing",
+        "script": "daily_briefing.py",
+        "script_args": ["--mode", "midday"],
+        "default_time": "17:00",
+        "default_interval": "daily",
+        "description": "Дневной брифинг (за 30 мин до NY-новостей)",
+    },
+    "evening": {
+        "name": "Mini-Agent Evening Briefing",
+        "script": "daily_briefing.py",
+        "script_args": ["--mode", "evening"],
+        "default_time": "18:30",
+        "default_interval": "daily",
+        "description": "Вечерний брифинг (после NY-новостей)",
     },
     "monitor": {
         "name": "Mini-Agent Position Monitor",
         "script": "position_monitor.py",
+        "script_args": [],
         "default_time": "00:00",
         "default_interval": "hourly",
         "description": "Мониторинг позиций MT5",
@@ -173,7 +191,13 @@ def cmd_create(args):
         print("[create] Задача существует, удаляю...")
         _run_schtasks(["/Delete", "/TN", task_name, "/F"])
 
-    tr = f'"{PYTHON_EXE}" "{script_path}"'
+    # Формируем команду с аргументами
+    args_list = task.get("script_args", [])
+    args_str = " ".join(args_list)
+    if args_str:
+        tr = f'"{PYTHON_EXE}" "{script_path}" {args_str}'
+    else:
+        tr = f'"{PYTHON_EXE}" "{script_path}"'
 
     if interval == "hourly":
         schtasks_args = [

@@ -126,28 +126,25 @@ def pick_provider(user_text: str, available: list,
     Возвращает имя провайдера для запроса или None (если не решил).
     available — список доступных провайдеров из registry.
     """
-    # Торговые действия — ПЕРВЫМИ, чтобы "купи BTCUSD" не ушло в код
+    # Торговые действия — ПЕРВЫМИ
     if _matches(user_text, TRADE_ACTION_PATTERNS):
-        if "gemini" in available:
-            return "gemini"
-        if "groq" in available:
-            return "groq"
+        for p in ("gemini", "openrouter", "groq"):
+            if p in available:
+                return p
         return None
 
     # Трейдинг — Gemini (брифинг, анализ цены)
     if _matches(user_text, TRADING_PATTERNS):
-        if "gemini" in available:
-            return "gemini"
-        if "groq" in available:
-            return "groq"
+        for p in ("gemini", "openrouter", "groq"):
+            if p in available:
+                return p
         return None
 
-    # Web search — Gemini (надёжнее, чем Groq с его tools)
+    # Web search — Gemini/OpenRouter/Groq
     if _matches(user_text, WEB_SEARCH_PATTERNS):
-        if "gemini" in available:
-            return "gemini"
-        if "groq" in available:
-            return "groq"
+        for p in ("gemini", "openrouter", "groq"):
+            if p in available:
+                return p
         return None
 
     # Vision — только Gemini
@@ -156,25 +153,24 @@ def pick_provider(user_text: str, available: list,
             return "gemini"
         return None
 
-    # Аналитика — Gemini (ДО кода: "проанализируй код" = анализ)
+    # Аналитика — Gemini/OpenRouter/Groq
     if _matches(user_text, ANALYSIS_PATTERNS):
-        if "gemini" in available:
-            return "gemini"
-        if "groq" in available:
-            return "groq"
+        for p in ("gemini", "openrouter", "groq"):
+            if p in available:
+                return p
         return None
 
-    # Код — Mistral (если есть)
+    # Код — Mistral/OpenRouter/Groq
     if _matches(user_text, CODE_PATTERNS):
-        if "mistral" in available:
-            return "mistral"
-        if "groq" in available:
-            return "groq"
+        for p in ("mistral", "openrouter", "groq"):
+            if p in available:
+                return p
         return None
 
-    # Всё остальное — Groq (быстрый, щедрая квота)
-    if "groq" in available:
-        return "groq"
+    # Всё остальное — Groq/OpenRouter
+    for p in ("groq", "openrouter"):
+        if p in available:
+            return p
 
     return None
 

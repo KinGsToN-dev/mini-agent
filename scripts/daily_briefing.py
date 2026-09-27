@@ -1,18 +1,19 @@
-"""
-Утренний брифинг по расписанию.
+﻿"""Утренний / дневной / вечерний брифинг.
 
-Запускается Windows Task Scheduler в 09:00 (GMT+5 = 04:00 UTC).
-Собирает данные из MT5 и Biquote, отправляет анализ в Telegram через Groq.
+Режимы:
+    daily    — утренний (04:00 GMT+5): перед азиатской сессией
+    midday   — дневной (17:00 GMT+5): за 30 мин до NY-новостей
+    evening  — вечерний (18:30 GMT+5): сразу после NY-новостей
 
-Запуск вручную: python scripts/daily_briefing.py
+Запуск: python scripts/daily_briefing.py [--mode daily|midday|evening]
 """
+import argparse
 import os
 import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Добавляем корень проекта в path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from dotenv import load_dotenv
@@ -29,41 +30,151 @@ from tools.telegram_tools import telegram_send
 SYMBOLS = ["BTCUSD", "XAUUSD", "EURUSD"]
 COUNTRIES = "US,EU,GB"
 IMPORTANCE = "high"
-TITLE = "🌅 Утренний брифинг"
+
+PROJECT_DIR = Path(__file__).parent.parent
+LOG_FILE = PROJECT_DIR / "briefing.log"
+
+
+# Режимы: название + промпт для LLM
+MODES = {
+    "daily": {
+        "title": "🌅 Утренний брифинг",
+        "prompt": (
+            "Ты — опытный финансовый аналитик. Напиши УТРЕННИЙ брифинг "
+            "(перед азиатской сессией).\n\n"
+            "ДАННЫЕ:\n{data}\n\n"
+            "ФОРМАТ (для Telegram, БЕЗ таблиц Markdown):\n\n"
+            "🌅 УТРЕННИЙ БРИФИНГ\n"
+            "[дата, время UTC / GMT+5]\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "📊 ОБЗОР РЫНКА\n"
+            "**BTCUSD** — $[цена], тренд [восходящий/нисходящий/боковой]\n"
+            "**XAUUSD** — $[цена], ...\n"
+            "**EURUSD** — $[цена], ...\n\n"
+            "📰 ЧТО БУДЕТ СЕГОДНЯ\n"
+            "[события с временем UTC и GMT+5, прогнозы]\n"
+            "ВАЖНО: различай СЕГОДНЯ и ЗАВТРА. Если событие завтра — пиши 'ЗАВТРА в HH:MM'.\n"
+            "Если сегодня важных событий нет — честно напиши 'На сегодня важных событий нет'.\n"
+            "НЕ ВЫДУМЫВАЙ события, которых нет в данных!\n\n"
+            "🎯 СЦЕНАРИИ НА ДЕНЬ\n"
+            "[бычий/медвежий для каждого символа]\n\n"
+            "💡 ВЫВОДЫ\n"
+            "[краткие выводы по каждому символу]\n\n"
+            "⚠️ Это не торговые сигналы. Риск-менеджмент обязателен.\n\n"
+            "ВАЖНО: НЕ используй Markdown-таблицы, НЕ используй HTML <br>,\n"
+            "максимум 3500 символов, пиши грамотно на русском."
+        ),
+    },
+    "midday": {
+        "title": "☀️ Дневной брифинг",
+        "prompt": (
+            "Ты — опытный финансовый аналитик. Напиши ДНЕВНОЙ брифинг "
+            "(за 30 минут до открытия NY-сессии и выхода американских новостей).\n\n"
+            "ДАННЫЕ:\n{data}\n\n"
+            "ФОРМАТ (для Telegram, БЕЗ таблиц):\n\n"
+            "☀️ ДНЕВНОЙ БРИФИНГ\n"
+            "[дата, время UTC / GMT+5]\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "📊 РЫНОК СЕЙЧАС\n"
+            "**BTCUSD** — $[цена], [тренд]\n"
+            "**XAUUSD** — $[цена], ...\n"
+            "**EURUSD** — $[цена], ...\n\n"
+            "⏰ ВНИМАНИЕ: ЧЕРЕЗ 30-60 МИН\n"
+            "[список новостей, которые выйдут в ближайший час —\n"
+            "прогнозы, важность, ожидаемое влияние]\n"
+            "ВАЖНО: если в ближайший час событий нет — напиши\n"
+            "'В ближайший час важных событий не ожидается'.\n"
+            "НЕ ВЫДУМЫВАЙ события! Используй ТОЛЬКО данные из календаря.\n\n"
+            "🎯 ПЛАН ДЕЙСТВИЙ\n"
+            "[как подготовиться к волатильности:\n"
+            "- закрыть/защитить существующие позиции\n"
+            "- где ставить стопы\n"
+            "- куда смотреть при пробое уровней]\n\n"
+            "💡 ВЫВОДЫ\n\n"
+            "⚠️ Это не торговые сигналы.\n\n"
+            "ВАЖНО: НЕ используй Markdown-таблицы, НЕ используй <br>,\n"
+            "максимум 3500 символов."
+        ),
+    },
+    "evening": {
+        "title": "🌆 Вечерний брифинг",
+        "prompt": (
+            "Ты — опытный финансовый аналитик. Напиши ВЕЧЕРНИЙ брифинг "
+            "(сразу после выхода NY-новостей — CPI/JOLTS/NFP/FED).\n\n"
+            "ДАННЫЕ:\n{data}\n\n"
+            "ФОРМАТ (для Telegram, БЕЗ таблиц):\n\n"
+            "🌆 ВЕЧЕРНИЙ БРИФИНГ\n"
+            "[дата, время UTC / GMT+5]\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "📊 РЕАКЦИЯ РЫНКА\n"
+            "**BTCUSD** — $[цена], [изменение за последний час]\n"
+            "**XAUUSD** — $[цена], ...\n"
+            "**EURUSD** — $[цена], ...\n\n"
+            "📰 ЧТО ВЫШЛО (факт vs прогноз)\n"
+            "[каждое событие:\n"
+            "- название\n"
+            "- время UTC/GMT+5\n"
+            "- ФАКТ vs ПРОГНОЗ (если есть в данных)\n"
+            "- реакция рынка]\n"
+            "КРИТИЧНО ВАЖНО: используй ТОЛЬКО события из данных.\n"
+            "Если в данных НЕТ событий с actual (фактом) — напиши\n"
+            "'Сегодня важных событий не выходило'.\n"
+            "НЕ ВЫДУМЫВАЙ CPI, NFP, FED или другие события!\n"
+            "Если не уверен — лучше не пиши вообще.\n\n"
+            "📈 РЕАКЦИЯ РЫНКА\n"
+            "[как отреагировали BTC/XAU/EUR — вверх/вниз, насколько]\n\n"
+            "📅 ЧТО БУДЕТ НА АЗИАТСКОЙ СЕССИИ\n"
+            "[события на ближайшие часы: BoJ, China PMI и т.д.]\n\n"
+            "🎯 СЦЕНАРИИ НА ВЕЧЕР\n"
+            "[бычий/медвежий после реакции]\n\n"
+            "💡 ВЫВОДЫ\n\n"
+            "⚠️ Это не торговые сигналы.\n\n"
+            "ВАЖНО: НЕ используй Markdown-таблицы, НЕ используй <br>,\n"
+            "максимум 3500 символов."
+        ),
+    },
+}
+
+
+# ============================================================
+# Логирование
+# ============================================================
+def log(msg: str, mode: str = "daily"):
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    line = f"[{ts}] [{mode}] {msg}"
+    print(line)
+    try:
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except Exception:
+        pass
 
 
 # ============================================================
 # Сбор данных
 # ============================================================
 def collect_data() -> str:
-    """Собирает данные по всем символам + экономический календарь."""
     utc_now = datetime.now(timezone.utc)
     local_now = datetime.now()
+    offset = round((local_now - utc_now.replace(tzinfo=None)).total_seconds() / 3600)
 
     parts = []
     parts.append(f"📅 Дата: {utc_now.strftime('%Y-%m-%d')}")
     parts.append(f"🕐 UTC: {utc_now.strftime('%H:%M')}")
-    parts.append(f"🕐 Локально (GMT+5): {local_now.strftime('%H:%M')}")
+    parts.append(f"🕐 Локально (GMT+{offset}): {local_now.strftime('%H:%M')}")
     parts.append("")
 
-    # Сводки по каждому символу
     for sym in SYMBOLS:
         parts.append(f"=== {sym} ===")
         try:
-            summary = mt5_summary(sym)
-            parts.append(summary)
+            parts.append(mt5_summary(sym))
         except Exception as e:
             parts.append(f"[ERROR] {sym}: {e}")
         parts.append("")
 
-    # Экономический календарь
     parts.append("=== 📰 ЭКОНОМИЧЕСКИЙ КАЛЕНДАРЬ ===")
     try:
-        calendar = econ_calendar(
-            countries=COUNTRIES,
-            importance=IMPORTANCE,
-            limit=10,
-        )
+        calendar = econ_calendar(countries=COUNTRIES, importance=IMPORTANCE, limit=10)
         parts.append(calendar)
     except Exception as e:
         parts.append(f"[ERROR] calendar: {e}")
@@ -72,107 +183,19 @@ def collect_data() -> str:
 
 
 # ============================================================
-# Анализ через Groq
+# Анализ
 # ============================================================
-def analyze_with_groq(data: str) -> str:
-    """Отправляет данные в Groq для профессионального анализа."""
+def analyze_with_groq(data: str, mode: str) -> str:
     try:
         from providers.registry import get_provider
     except Exception as e:
         return f"[ERROR] Не могу получить Groq: {e}\n\n{data}"
 
-    prompt = f"""Ты — опытный финансовый аналитик. Напиши утренний брифинг для Telegram.
-
-ДАННЫЕ:
-{data}
-
-ФОРМАТ (для Telegram, БЕЗ таблиц Markdown):
-
-🌅 УТРЕННИЙ БРИФИНГ
-[дата, время UTC / GMT+5]
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 КРАТКАЯ СВОДКА
-
-**BTCUSD** — $[цена]
-Тренд: [восходящий/нисходящий/боковой]
-Изменение 24ч: [+/-X%]
-
-**XAUUSD** — $[цена]
-Тренд: ...
-Изменение 24ч: ...
-
-**EURUSD** — $[цена]
-Тренд: ...
-Изменение 24ч: ...
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-
-📈 ТЕХНИЧЕСКИЙ АНАЛИЗ
-
-**BTCUSD**
-• Поддержка: MA20 = $X, MA50 = $Y
-• Сопротивление: $Z
-• RSI(14): [значение] — [интерпретация]
-
-**XAUUSD**
-• ...
-• ...
-
-**EURUSD**
-• ...
-• ...
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-
-📰 МАКРО КАЛЕНДАРЬ
-
-**28 сентября** (завтра)
-• 13:30 UTC (18:30 GMT+5) — Речь Лагард (EUR)
-• 14:00 UTC (19:00 GMT+5) — CB Consumer Confidence (USD)
-
-**29 сентября**
-• ...
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-
-🎯 СЦЕНАРИИ
-
-**BTCUSD**
-🐂 Бычий: [описание]
-🐻 Медвежий: [описание]
-
-**XAUUSD**
-🐂 Бычий: ...
-🐻 Медвежий: ...
-
-**EURUSD**
-🐂 Бычий: ...
-🐻 Медвежий: ...
-
-━━━━━━━━━━━━━━━━━━━━━━━━
-
-💡 ВЫВОДЫ
-
-• BTC: [краткий вывод]
-• XAU: [краткий вывод]
-• EUR: [краткий вывод]
-
-⚠️ Это не торговые сигналы. Риск-менеджмент обязателен.
-
-КРИТИЧЕСКИ ВАЖНО:
-- НЕ используй Markdown-таблицы (| ... |) — Telegram их не поддерживает
-- НЕ используй HTML-теги <br> — используй реальные переносы строк
-- Максимум 3500 символов (лимит Telegram 4096)
-- Пиши грамотно на русском
-- Давай рекомендации, НЕ сигналы
-- Экономь место, но не в ущерб содержанию
-"""
+    prompt_template = MODES[mode]["prompt"]
+    prompt = prompt_template.format(data=data)
 
     try:
         provider = get_provider("groq")
-        # Сообщения в OpenAI формате
         messages = [
             {"role": "system", "content": "Ты опытный финансовый аналитик. Пиши грамотно на русском."},
             {"role": "user", "content": prompt},
@@ -180,7 +203,7 @@ def analyze_with_groq(data: str) -> str:
         result = provider.ask(
             model_name="openai/gpt-oss-20b",
             messages=messages,
-            tools=None,  # Без tools для скорости
+            tools=None,
         )
         return result
     except Exception as e:
@@ -190,69 +213,55 @@ def analyze_with_groq(data: str) -> str:
 # ============================================================
 # Main
 # ============================================================
-# ============================================================
-# Логирование
-# ============================================================
-from pathlib import Path as _Path
-LOG_FILE = _Path(__file__).parent.parent / "briefing.log"
-
-
-def log(msg: str):
-    """Пишет в лог с timestamp."""
-    from datetime import datetime as _dt
-    ts = _dt.now().strftime("%Y-%m-%d %H:%M:%S")
-    line = f"[{ts}] {msg}"
-    print(line)
-    try:
-        with open(LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(line + "\n")
-    except Exception:
-        pass
-
-
 def main():
-    log("=" * 60)
-    log("УТРЕННИЙ БРИФИНГ — старт")
-    log("=" * 60)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", default="daily", choices=list(MODES.keys()))
+    args = parser.parse_args()
+    mode = args.mode
+
+    title = MODES[mode]["title"]
+
+    log("=" * 60, mode)
+    log(f"БРИФИНГ [{mode}] — старт", mode)
+    log("=" * 60, mode)
 
     total_start = time.time()
 
     # 1. Сбор данных
-    log("[1/3] Сбор данных...")
+    log(f"[1/3] Сбор данных...", mode)
     t0 = time.time()
     try:
         data = collect_data()
-        log(f"      OK ({time.time()-t0:.1f}с, {len(data)} символов)")
+        log(f"      OK ({time.time()-t0:.1f}с, {len(data)} символов)", mode)
     except Exception as e:
-        log(f"      ОШИБКА: {type(e).__name__}: {e}")
-        log("БРИФИНГ ПРЕРВАН")
+        log(f"      ОШИБКА: {type(e).__name__}: {e}", mode)
+        log("БРИФИНГ ПРЕРВАН", mode)
         return
 
-    # 2. Анализ через Groq
-    log("[2/3] Анализ через Groq...")
+    # 2. Анализ
+    log(f"[2/3] Анализ через Groq...", mode)
     t0 = time.time()
     try:
-        briefing = analyze_with_groq(data)
-        log(f"      OK ({time.time()-t0:.1f}с, {len(briefing)} символов)")
+        briefing = analyze_with_groq(data, mode)
+        log(f"      OK ({time.time()-t0:.1f}с, {len(briefing)} символов)", mode)
     except Exception as e:
-        log(f"      ОШИБКА: {type(e).__name__}: {e}")
-        log("БРИФИНГ ПРЕРВАН")
+        log(f"      ОШИБКА: {type(e).__name__}: {e}", mode)
+        log("БРИФИНГ ПРЕРВАН", mode)
         return
 
-    # 3. Отправка в Telegram
-    log("[3/3] Отправка в Telegram...")
+    # 3. Отправка
+    log(f"[3/3] Отправка в Telegram...", mode)
     t0 = time.time()
     try:
-        result = telegram_send(briefing, title=TITLE)
-        log(f"      {result} ({time.time()-t0:.1f}с)")
+        result = telegram_send(briefing, title=title)
+        log(f"      {result} ({time.time()-t0:.1f}с)", mode)
     except Exception as e:
-        log(f"      ОШИБКА: {type(e).__name__}: {e}")
-        log("БРИФИНГ ПРЕРВАН")
+        log(f"      ОШИБКА: {type(e).__name__}: {e}", mode)
         return
 
-    log("=" * 60)
-    log(f"ГОТОВО (общее время: {time.time()-total_start:.1f}с)")
-    log("=" * 60)
+    log("=" * 60, mode)
+    log(f"ГОТОВО (общее время: {time.time()-total_start:.1f}с)", mode)
+    log("=" * 60, mode)
 
 
 if __name__ == "__main__":
