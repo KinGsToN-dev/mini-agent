@@ -1,7 +1,12 @@
-"""Тесты для tools/mt5_tools.py — с моками MT5."""
+"""Тесты для tools/mt5_tools.py — с моками MT5.
+Пропускаются, если MetaTrader5 не установлен или не запущен.
+"""
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Пропускаем весь файл, если MT5 не установлен
+pytest.importorskip("MetaTrader5", reason="MetaTrader5 not installed")
 
 from tools import mt5_tools
 

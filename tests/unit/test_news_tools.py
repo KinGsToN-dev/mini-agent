@@ -1,7 +1,12 @@
-"""Тесты для tools/news_tools.py — с моками Biquote."""
+"""Тесты для tools/news_tools.py — с моками Biquote.
+Пропускаются, если biquote не установлен.
+"""
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Пропускаем весь файл, если biquote не установлен
+pytest.importorskip("biquote", reason="biquote not installed")
 
 from tools import news_tools
 
