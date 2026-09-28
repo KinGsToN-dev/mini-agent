@@ -57,8 +57,11 @@ class TestTvScreenshot:
                 mock_tab.return_value = {"webSocketDebuggerUrl": "ws://test"}
                 with patch("tools.tradingview._capture_screenshot", new_callable=AsyncMock) as mock_c:
                     mock_c.return_value = b"x" * 100
-                    result = tradingview.tv_screenshot()
-                    assert "[WARN]" in result or "маленький" in result.lower()
+                    # FIX: мокаем self-healing guard
+                    with patch("tools.tradingview.ensure_tv_running",
+                               return_value=(True, "mocked")):
+                        result = tradingview.tv_screenshot()
+                        assert "[WARN]" in result or "маленький" in result.lower()
 
 
 class TestTvAnalyze:
@@ -88,9 +91,12 @@ class TestTvAnalyze:
             return f"[OK] {save_path}"
 
         with patch("tools.tradingview.tv_screenshot", side_effect=mock_screenshot):
-            result = tradingview.tv_analyze("test")
-            assert "[ERROR]" in result
-            assert "GEMINI_API_KEY" in result
+            # FIX: мокаем self-healing guard
+            with patch("tools.tradingview.ensure_tv_running",
+                       return_value=(True, "mocked")):
+                result = tradingview.tv_analyze("test")
+                assert "[ERROR]" in result
+                assert "GEMINI_API_KEY" in result
 
 
 class TestConfig:

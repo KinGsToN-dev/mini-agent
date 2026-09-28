@@ -197,12 +197,16 @@ class TestConfirmation:
 
             mock_mt5.return_value = (mt5, None)
 
-            # Callback отклоняет
-            mt5_trade.set_confirm_callback(lambda info: False)
-            mt5_trade.CONFIRM_REQUIRED = True
+            # FIX: мокаем self-healing guard — иначе на CI вернёт [ERROR] до callback
+            with patch.object(mt5_trade, "ensure_mt5_running",
+                              return_value=(True, "mocked")):
 
-            result = mt5_trade.mt5_order("BTCUSD", "BUY", 0.01)
-            assert "[CANCELLED]" in result
+                # Callback отклоняет
+                mt5_trade.set_confirm_callback(lambda info: False)
+                mt5_trade.CONFIRM_REQUIRED = True
+
+                result = mt5_trade.mt5_order("BTCUSD", "BUY", 0.01)
+                assert "[CANCELLED]" in result
 
 
 # ============================================================
