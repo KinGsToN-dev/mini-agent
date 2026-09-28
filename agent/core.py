@@ -7,7 +7,7 @@ from rich.panel import Panel
 
 from config import MODELS, MODEL_CATALOG, DEFAULT_MODEL, SYSTEM_PROMPT, MAX_TOOL_ITERATIONS
 from providers.fallback import try_with_fallback
-from tools.registry import TOOL_SCHEMAS, execute_tool
+from tools.registry import TOOL_SCHEMAS, execute_tool, set_tool_context, clear_tool_context
 from agent.streaming import stream_interaction
 from agent.state import load_exhausted, save_exhausted, clear_state
 from agent import history as history_mod
@@ -215,7 +215,7 @@ class GeminiAgent:
         clear_state()
         console.print("[green]Кэш исчерпанных моделей сброшен[/green]")
 
-    def ask(self, user_text: str) -> str:
+    def ask(self, user_text: str, chat_id: int | None = None) -> str:
         self.last_user_message = user_text
 
         # Локальная запись user-сообщения
@@ -275,7 +275,7 @@ class GeminiAgent:
         iteration = 0
         while func_calls and iteration < MAX_TOOL_ITERATIONS:
             iteration += 1
-            func_results = self._execute_calls(func_calls)
+            func_results = self._execute_calls(func_calls, chat_id=chat_id)
 
             t2 = time.time()
             console.print(f"[dim]⏱  продолжение с результатами...[/dim]")
@@ -300,8 +300,10 @@ class GeminiAgent:
     def _run_stream(self, kwargs):
         return try_with_fallback(self, kwargs, stream_interaction, console)
 
-    def _execute_calls(self, func_calls):
+    def _execute_calls(self, func_calls, chat_id: int | None = None):
         results = []
+        if chat_id is not None:
+            set_tool_context(chat_id=chat_id, use_command_bot=True)
         for call in func_calls:
             name, args, call_id = call["name"], call["arguments"], call["id"]
             console.print(Panel.fit(

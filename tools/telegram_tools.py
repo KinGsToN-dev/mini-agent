@@ -14,6 +14,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Импорт контекста инструментов
+try:
+    from tools.registry import get_tool_context
+except ImportError:
+    get_tool_context = None
+
 
 def telegram_send(
     message: str,
@@ -35,8 +41,23 @@ def telegram_send(
     if not message.strip():
         return "[ERROR] Пустое сообщение"
 
+    # --- Читаем контекст (если он есть) ---
+    ctx_chat_id = None
+    ctx_use_command_bot = False
+    if get_tool_context is not None:
+        try:
+            ctx = get_tool_context() or {}
+            ctx_chat_id = ctx.get("chat_id")
+            ctx_use_command_bot = bool(ctx.get("use_command_bot"))
+        except Exception:
+            pass
+
+    # --- Приоритет: параметр > контекст > env ---
+    effective_chat_id = chat_id if chat_id is not None else ctx_chat_id
+    effective_use_command_bot = use_command_bot or ctx_use_command_bot
+
     # --- Токен ---
-    if use_command_bot:
+    if effective_use_command_bot:
         token = os.getenv("TELEGRAM_COMMAND_BOT_TOKEN")
         token_name = "TELEGRAM_COMMAND_BOT_TOKEN"
     else:
@@ -47,14 +68,16 @@ def telegram_send(
         return f"[ERROR] Нет {token_name} в .env"
 
     # --- chat_id ---
-    if chat_id is None:
+    if effective_chat_id is None:
         chat_id_raw = os.getenv("TELEGRAM_CHAT_ID")
         if not chat_id_raw:
             return "[ERROR] Нет TELEGRAM_CHAT_ID в .env и не передан chat_id"
         try:
-            chat_id = int(chat_id_raw)
+            effective_chat_id = int(chat_id_raw)
         except ValueError:
             return f"[ERROR] Некорректный TELEGRAM_CHAT_ID: {chat_id_raw!r}"
+
+    chat_id = effective_chat_id
 
     # --- Определяем формат ---
     has_html = any(
