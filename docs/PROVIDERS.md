@@ -159,12 +159,12 @@ Fallback для Gemini — если квота исчерпана
 Роутер сам выбирает провайдера под задачу:
 
 Тип запроса	Приоритет	Fallback
-Торговые действия («купи BTCUSD»)	Gemini	OpenRouter → Groq
-Трейдинг («брифинг», «анализ»)	Gemini	OpenRouter → Groq
-Web search («найди в интернете»)	Gemini	OpenRouter → Groq
+Торговые действия («купи BTCUSD»)	Gemini	OpenRouter
+Трейдинг («брифинг», «анализ»)	Gemini	OpenRouter
+Web search («найди в интернете»)	Gemini	OpenRouter
 Vision («что на экране»)	Gemini	—
-Анализ («проанализируй код»)	Gemini	OpenRouter → Groq
-Код («напиши функцию»)	Mistral	OpenRouter → Groq
+Анализ («проанализируй код»)	Gemini	OpenRouter
+Код («напиши функцию»)	Mistral	OpenRouter
 Общее («привет»)	Groq	OpenRouter
 Управление
 text
@@ -262,3 +262,18 @@ Mistral — код
 OpenRouter — fallback + free-модели
 
 Стратегия: используй каждого там, где он силён.
+
+---
+
+## ⚠️ ВАЖНО: Groq не для трейдинга
+
+Groq `gpt-oss-20b` **ломает tool-calling** при 25+ инструментах в контексте.
+Ошибка выглядит так:
+attempted to call tool 'mt5_summary<|channel|>commentary'
+which was not in request.tools
+
+text
+
+Поэтому **трейдинг всегда идёт в Gemini**. Если Gemini исчерпан — fallback идёт
+в **OpenRouter** (Llama 3.3 70B отлично делает tool-calls). Groq используется
+только для простых запросов без tools ("привет", "как дела").

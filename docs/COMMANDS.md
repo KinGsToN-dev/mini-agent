@@ -27,7 +27,9 @@
 /router	Показать статус роутера
 /router on	Включить авто-выбор провайдера
 /router off	Выключить (все запросы в текущего провайдера)
-Роутер сам выбирает: трейдинг → Gemini, код → Mistral, общее → Groq.
+Роутер сам выбирает: трейдинг → **Gemini**, web_search → **Gemini**, код → **Mistral**, vision → **Gemini**, общее → **Groq**.
+
+**Важно:** Groq не используется для трейдинга — `gpt-oss-20b` ломает tool-calls (ошибка вида `attempted to call tool 'mt5_summary<|channel|>commentary'`).
 
 🔒 Безопасность
 Режимы работы

@@ -489,3 +489,98 @@ MT5 торговля	5
 Новости	1
 Telegram	1
 ВСЕГО	25
+
+
+---
+
+## 📈 TradingView
+
+### tv_screenshot
+
+**Назначение:** сделать скриншот графика TradingView (Desktop) и сохранить в PNG.
+
+**Требует:** TradingView Desktop запущен с CDP на порту 9222 (см. `start_tradingview.ps1`).
+
+**Параметры:**
+- `save_path` (str, опц.) — куда сохранить (по умолчанию `tv_screenshots/tv_<timestamp>.png`)
+
+**Пример:**
+сделай скриншот TradingView
+[tv_screenshot {}]
+
+text
+
+---
+
+### tv_analyze ⭐
+
+**Назначение:** скриншот TradingView + анализ через **Gemini Vision**. Читает bias, score, BXO, структуру (BOS/CHoCH/FVG/OB), liquidity, MACD/RSI.
+
+**Требует:** TradingView Desktop + `GEMINI_API_KEY`.
+
+**Параметры:**
+- `prompt` (str, опц.) — что спросить у Gemini
+
+**Важно:** `tv_analyze` **сам отправляет** скриншот в Telegram через `telegram_send_photo` — от того же бота и в тот же чат, откуда пришёл запрос. Это решает проблему «фото уходит от RSIbot вместо bot #2».
+
+**Пример:**
+проанализируй XAUUSD с скриншотом
+[tv_analyze {'prompt': 'Прочитай bias, score, BXO, структуру...'}]
+
+text
+
+---
+
+## 📱 Telegram
+
+### telegram_send
+
+**Назначение:** отправить сообщение в Telegram.
+
+**Параметры:**
+- `message` (str) — текст
+- `title` (str, опц.) — заголовок (жирный)
+- `chat_id` (int, опц.) — ID чата (если не указан — из контекста или `.env`)
+- `use_command_bot` (bool, опц.) — использовать ли командный бот
+
+**Приоритет токена:** если `TELEGRAM_COMMAND_BOT_TOKEN` есть в `.env` — используется он (даже без `use_command_bot=True`). Это гарантирует, что сообщения идут от bot #2.
+
+**Пример:**
+отправь в телеграм: анализ BTC завершён, цена 84500
+[telegram_send {'message': 'Анализ BTC завершён...', 'title': 'BTC Update'}]
+
+text
+
+---
+
+### telegram_send_photo
+
+**Назначение:** отправить фото (PNG/JPEG) в Telegram.
+
+**Параметры:**
+- `photo_path` (str) — путь к файлу
+- `caption` (str, опц.) — подпись (до 1000 символов)
+- `chat_id` (int, опц.) — ID чата
+- `use_command_bot` (bool, опц.) — использовать ли командный бот
+
+**Пример:**
+отправь скриншот XAUUSD в телеграм
+[telegram_send_photo {'photo_path': 'tv_screenshots/tv_analyze_...png', 'caption': 'XAUUSD (gemini)'}]
+
+text
+
+---
+
+## 📊 Итого (обновлено)
+
+| Категория | Инструментов |
+|-----------|--------------|
+| Файлы и shell | 5 |
+| Система | 6 |
+| Интернет | 2 |
+| MT5 чтение | 5 |
+| MT5 торговля | 5 |
+| Новости | 1 |
+| TradingView | 2 |
+| Telegram | 2 |
+| **ВСЕГО** | **28** |
