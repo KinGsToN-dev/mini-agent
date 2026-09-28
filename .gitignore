@@ -63,3 +63,9 @@ project_dump.txt
 *.dump
 
 requirements.txt.bak_*
+# Logs
+*.log
+briefing.log
+agent.log
+position_monitor.log
+trades.log
