@@ -38,8 +38,9 @@ def append_message(session_name: str, role: str, text: str):
     try:
         with open(path, "a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"history: append_message('{session_name}') failed: {type(e).__name__}: {e}", level="WARNING")
 
 
 def load_messages(session_name: str) -> list:
@@ -58,10 +59,13 @@ def load_messages(session_name: str) -> list:
                     continue
                 try:
                     messages.append(json.loads(line))
-                except Exception:
+                except Exception as e:
+                    from agent.log import log
+                    log(f"history: bad JSON line in '{session_name}': {e}", level="DEBUG")
                     continue
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"history: load_messages('{session_name}') failed: {type(e).__name__}: {e}", level="WARNING")
     return messages
 
 
@@ -75,8 +79,9 @@ def clear_messages(session_name: str):
     if os.path.exists(path):
         try:
             os.remove(path)
-        except Exception:
-            pass
+        except Exception as e:
+            from agent.log import log
+            log(f"history: clear_messages('{session_name}') failed: {type(e).__name__}: {e}", level="WARNING")
 
 
 def find_in_messages(query: str, session_names: list = None) -> list:

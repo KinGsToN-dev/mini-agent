@@ -42,7 +42,9 @@ def list_sessions() -> list:
                 "message_count": data.get("message_count", 0),
                 "preview": data.get("preview", ""),
             })
-        except Exception:
+        except Exception as e:
+            from agent.log import log
+            log(f"sessions: bad file '{fname}': {type(e).__name__}: {e}", level="DEBUG")
             continue
     # Сортируем по дате обновления (свежие сверху)
     sessions.sort(key=lambda s: s.get("updated", ""), reverse=True)
@@ -118,8 +120,9 @@ def _set_last(name: str):
     try:
         with open(LAST_SESSION_FILE, "w", encoding="utf-8") as f:
             json.dump({"name": name}, f)
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"sessions: _set_last('{name}') failed: {type(e).__name__}: {e}", level="WARNING")
 
 
 def get_last_name() -> str | None:
@@ -129,7 +132,9 @@ def get_last_name() -> str | None:
     try:
         with open(LAST_SESSION_FILE, "r", encoding="utf-8") as f:
             return json.load(f).get("name")
-    except Exception:
+    except Exception as e:
+        from agent.log import log
+        log(f"sessions: get_last_name failed: {type(e).__name__}: {e}", level="WARNING")
         return None
 
 
@@ -146,8 +151,9 @@ def _get_preview(agent) -> str:
                 with open(path, "r", encoding="utf-8") as f:
                     old = json.load(f)
                 return old.get("preview", "")
-        except Exception:
-            pass
+        except Exception as e:
+            from agent.log import log
+            log(f"sessions: _get_preview failed: {type(e).__name__}: {e}", level="DEBUG")
     return ""
 
 
@@ -175,8 +181,9 @@ def delete_session(name: str) -> str:
     if get_last_name() == safe:
         try:
             os.remove(LAST_SESSION_FILE)
-        except Exception:
-            pass
+        except Exception as e:
+            from agent.log import log
+            log(f"sessions: delete last '{safe}' failed: {type(e).__name__}: {e}", level="DEBUG")
 
     return name
 
@@ -208,8 +215,9 @@ def rename_session(old_name: str, new_name: str) -> str:
         data["updated"] = datetime.now().isoformat(timespec="seconds")
         with open(new_json, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"sessions: rename '{old_name}' json update failed: {type(e).__name__}: {e}", level="WARNING")
 
     # Переименовываем .jsonl (если есть)
     old_jsonl = os.path.join(SESSIONS_DIR, f"{old_safe}.jsonl")
@@ -231,8 +239,9 @@ def autosave(agent):
         return
     try:
         save_session(name, agent)
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"sessions: autosave('{name}') failed: {type(e).__name__}: {e}", level="WARNING")
 
 
 

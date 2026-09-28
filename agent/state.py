@@ -19,7 +19,9 @@ def load_exhausted() -> set:
     try:
         with open(STATE_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-    except Exception:
+    except Exception as e:
+        from agent.log import log
+        log(f"state: load_exhausted failed: {type(e).__name__}: {e}", level="WARNING")
         return set()
 
     saved_date = data.get("date")
@@ -41,8 +43,9 @@ def save_exhausted(exhausted: set):
     try:
         with open(STATE_FILE, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"state: save_exhausted failed: {type(e).__name__}: {e}", level="WARNING")
 
 
 def clear_state():
@@ -50,5 +53,6 @@ def clear_state():
     try:
         if os.path.exists(STATE_FILE):
             os.remove(STATE_FILE)
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"state: clear_state failed: {type(e).__name__}: {e}", level="WARNING")

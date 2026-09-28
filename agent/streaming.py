@@ -59,7 +59,9 @@ def stream_interaction(client, kwargs):
                     raw = info.get("args_buffer") or "{}"
                     try:
                         args = json.loads(raw)
-                    except Exception:
+                    except Exception as e:
+                        from agent.log import log
+                        log(f"streaming: bad JSON args '{raw[:80]}': {e}", level="DEBUG")
                         args = {}
                     function_calls.append({
                         "name": info["name"],

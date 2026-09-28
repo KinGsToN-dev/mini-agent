@@ -26,8 +26,9 @@ class GeminiAgent:
         try:
             from tools.registry import set_vision_client
             set_vision_client(self.client)
-        except Exception:
-            pass
+        except Exception as e:
+            from agent.log import log
+            log(f"core: set_vision_client failed: {type(e).__name__}: {e}", level="WARNING")
         if model_key not in MODELS:
             console.print(f"[yellow]⚠ Модель '{model_key}' не найдена, "
                           f"использую '{MODEL_CATALOG[0][0]}'[/yellow]")
@@ -230,8 +231,9 @@ class GeminiAgent:
         try:
             if self.current_session_name:
                 history_mod.append_message(self.current_session_name, "user", user_text)
-        except Exception:
-            pass
+        except Exception as e:
+            from agent.log import log
+            log(f"core: append user msg failed: {type(e).__name__}: {e}", level="WARNING")
 
         # === РОУТЕР ПРОВАЙДЕРОВ ===
         if self.router_enabled:
@@ -255,8 +257,8 @@ class GeminiAgent:
                     )
                     self.switch_provider(target)
             except Exception as _e:
-                # Не критично — если роутер упал, работаем как есть
-                pass
+                from agent.log import log
+                log(f"core: router failed: {type(_e).__name__}: {_e}", level="WARNING")
 
         # Если провайдер НЕ gemini — идём через OpenAI-совместимый путь
         if self.provider_name != "gemini":
@@ -309,8 +311,9 @@ class GeminiAgent:
         try:
             if self.current_session_name and text:
                 history_mod.append_message(self.current_session_name, "agent", text)
-        except Exception:
-            pass
+        except Exception as e:
+            from agent.log import log
+            log(f"core: append agent msg failed: {type(e).__name__}: {e}", level="WARNING")
         clear_tool_context()
         return text or "(пустой ответ)"
 
