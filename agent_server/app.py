@@ -89,7 +89,9 @@ def status() -> StatusResponse:
     try:
         from tools.shell import get_mode
         mode = get_mode()
-    except Exception:
+    except Exception as e:
+        from agent.log import log
+        log(f"app: get_mode failed: {type(e).__name__}: {e}", level="DEBUG")
         mode = "ask"
 
     return StatusResponse(
@@ -173,11 +175,13 @@ def forget() -> ForgetResponse:
             try:
                 from agent.state import clear_state
                 clear_state()
-            except Exception:
-                pass
+            except Exception as e:
+                from agent.log import log
+                log(f"app: forget clear_state failed: {type(e).__name__}: {e}", level="DEBUG")
             count += 1
-        except Exception:
-            pass
+        except Exception as e:
+            from agent.log import log
+            log(f"app: forget session '{sid}' failed: {type(e).__name__}: {e}", level="WARNING")
     return ForgetResponse(status="ok", cleared_sessions=count)
 
 
@@ -190,7 +194,9 @@ def providers() -> ProvidersResponse:
     try:
         from providers import registry as provider_registry
         available = provider_registry.available_providers()
-    except Exception:
+    except Exception as e:
+        from agent.log import log
+        log(f"app: available_providers failed: {type(e).__name__}: {e}", level="WARNING")
         available = []
 
     sm = _get_session_manager()

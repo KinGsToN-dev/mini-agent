@@ -41,8 +41,9 @@ def log(msg: str):
     try:
         with open(LOG_FILE, "a", encoding="utf-8") as f:
             f.write(line + "\n")
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"position_monitor: log write failed: {type(e).__name__}: {e}", level="WARNING")
 
 
 # ============================================================
@@ -54,7 +55,9 @@ def load_state() -> dict:
     try:
         with open(STATE_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except Exception as e:
+        from agent.log import log
+        log(f"position_monitor: load_state failed: {type(e).__name__}: {e}", level="WARNING")
         return {}
 
 

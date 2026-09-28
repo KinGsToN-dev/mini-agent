@@ -65,7 +65,9 @@ class OpenAICompatProvider(Provider):
                 for tc in msg.tool_calls:
                     try:
                         args = json.loads(tc.function.arguments or "{}")
-                    except Exception:
+                    except Exception as e:
+                        from agent.log import log
+                        log(f"openai_compat: bad JSON args for {tc.function.name}: {e}", level="WARNING")
                         args = {}
                     result = execute_tool(tc.function.name, args)
                     if len(result) > 8000:

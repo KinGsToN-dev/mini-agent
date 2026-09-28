@@ -6,8 +6,9 @@ def _record_fallback():
     try:
         from agent import analytics
         analytics.get().record_fallback()
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"fallback: record_fallback failed: {type(e).__name__}: {e}", level="DEBUG")
 
 
 def is_rate_limit(exc: Exception) -> bool:

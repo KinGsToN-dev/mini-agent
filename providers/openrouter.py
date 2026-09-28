@@ -86,7 +86,9 @@ class OpenRouterProvider(Provider):
                 for tc in unique:
                     try:
                         args = json.loads(tc.function.arguments or "{}")
-                    except Exception:
+                    except Exception as e:
+                        from agent.log import log
+                        log(f"openrouter: bad JSON args for {tc.function.name}: {e}", level="WARNING")
                         args = {}
 
                     from rich.console import Console

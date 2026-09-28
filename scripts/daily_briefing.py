@@ -146,8 +146,9 @@ def log(msg: str, mode: str = "daily"):
     try:
         with open(LOG_FILE, "a", encoding="utf-8") as f:
             f.write(line + "\n")
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"daily_briefing: log write failed: {type(e).__name__}: {e}", level="WARNING")
 
 
 # ============================================================

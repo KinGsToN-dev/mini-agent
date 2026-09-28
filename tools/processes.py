@@ -28,8 +28,9 @@ def processes(action: str = "list", filter: str = None,
             for p in psutil.process_iter(["pid", "name"]):
                 try:
                     p.cpu_percent(None)
-                except Exception:
-                    pass
+                except Exception as e:
+                    from agent.log import log
+                    log(f"processes: warmup failed: {type(e).__name__}: {e}", level="TRACE")
             time.sleep(0.3)
 
             procs = []
