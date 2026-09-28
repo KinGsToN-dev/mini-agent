@@ -69,3 +69,32 @@ briefing.log
 agent.log
 position_monitor.log
 trades.log
+
+# TV screenshots
+tv_screenshots/
+
+# TV temporary dumps and test scripts
+_tv_dump/
+_tv_dump2/
+_tv_dump3/
+_tv_*.py
+tv_test_screenshot.png
+tv_screenshots/
+
+# Backups
+*.bak_*
+*.bak_tv_*
+*.bak_dbg_*
+*.bak_fix_*
+*.bak2_*
+*.bak3_*
+requirements.txt.bak_*
+
+# Logs
+*.log
+
+# Patch scripts
+_patch_*.py
+_clean_*.py
+_fix_*.py
+_add_debug.py

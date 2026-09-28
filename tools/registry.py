@@ -17,6 +17,7 @@ from .mt5_tools import mt5_quote, mt5_bars, mt5_account, mt5_positions, mt5_summ
 from .mt5_trade import mt5_order, mt5_close, mt5_close_all, mt5_modify, mt5_pending
 from .news_tools import econ_calendar
 from .telegram_tools import telegram_send
+from .tradingview import tv_screenshot, tv_analyze
 
 
 # ============================================================
@@ -349,6 +350,26 @@ TOOL_SCHEMAS = [
             "required": ["message"],
         },
     },
+    {
+        "type": "function", "name": "tv_screenshot",
+        "description": "Сделать скриншот графика TradingView (Desktop) и сохранить в PNG. Возвращает путь к файлу. Не анализирует содержимое.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "save_path": {"type": "string", "description": "Путь для сохранения (опционально)"},
+            },
+        },
+    },
+    {
+        "type": "function", "name": "tv_analyze",
+        "description": "Сделать скриншот графика TradingView + отправить в Gemini Vision. Прочитать bias, score, BXO, структуру (BOS/CHoCH/FVG/OB), liquidity, MACD/RSI. Использовать для анализа трейдинга с учётом индикаторов пользователя.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "prompt": {"type": "string", "description": "Что спросить у Gemini. По умолчанию — прочитать все индикаторы графика."},
+            },
+        },
+    },
 ]
 
 
@@ -378,6 +399,8 @@ TOOL_FUNCTIONS = {
     "mt5_pending": mt5_pending,
     "econ_calendar": econ_calendar,
     "telegram_send": telegram_send,
+    "tv_screenshot": tv_screenshot,
+    "tv_analyze": tv_analyze,
 }
 
 
