@@ -171,3 +171,14 @@ test_results.txt
 # Update_docs
 # ============================================================
 update_docs.py
+
+# Self-healing
+deps.log
+probe.log
+probe_v2.log
+_backup_deps_*/
+_backup_tvfix_*/
+
+# Probe scripts
+probe_dependencies.py
+probe_dependencies_v2.py

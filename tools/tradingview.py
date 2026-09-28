@@ -9,6 +9,8 @@ tv_analyze(prompt) — скриншот + Gemini Vision → текстовое �
 """
 
 import asyncio
+
+from tools._deps import ensure_tv_running
 import base64
 import json
 import time
@@ -119,6 +121,9 @@ def tv_screenshot(save_path: str = None) -> str:
     Returns:
         Путь к сохранённому файлу + размер.
     """
+    ok, msg = ensure_tv_running()
+    if not ok:
+        return f"[ERROR] TradingView unavailable: {msg}"
     try:
         # 1. Найти вкладку
         tv_tab = asyncio.run(_get_tv_tab())
@@ -163,6 +168,9 @@ def tv_screenshot(save_path: str = None) -> str:
 # ============================================================
 
 def tv_analyze(prompt: str = None) -> str:
+    ok, msg = ensure_tv_running()
+    if not ok:
+        return f"[ERROR] TradingView unavailable: {msg}"
     # FIX: save context BEFORE asyncio.run, because ContextVar is lost inside
     _saved_chat_id = None
     _saved_use_cmd = False
@@ -202,7 +210,12 @@ def tv_analyze(prompt: str = None) -> str:
     SCREENSHOT_DIR.mkdir(exist_ok=True)
     img_path = SCREENSHOT_DIR / f"tv_analyze_{ts}.png"
 
+    # FIX: ретрай — CDP может быть готов, а вкладка с chart ещё грузится
     screenshot_result = tv_screenshot(str(img_path))
+    if not screenshot_result.startswith("[OK]"):
+        import time as _time
+        _time.sleep(3)
+        screenshot_result = tv_screenshot(str(img_path))
     if not screenshot_result.startswith("[OK]"):
         return f"[ERROR] Не удалось сделать скриншот:\n{screenshot_result}"
 

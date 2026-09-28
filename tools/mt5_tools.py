@@ -1,5 +1,7 @@
 """Инструменты MetaTrader 5 — только чтение (безопасно)."""
-from datetime import datetime, timezone
+from datetime import datetime
+
+from tools._deps import ensure_mt5_running
 
 
 TIMEFRAMES = {
@@ -35,6 +37,9 @@ def _fmt_utc_time():
 
 
 def mt5_quote(symbol: str) -> str:
+    ok, msg = ensure_mt5_running()
+    if not ok:
+        return f"[ERROR] MT5 unavailable: {msg}"
     mt5, err = _mt5()
     if err:
         return err
@@ -58,6 +63,9 @@ def mt5_quote(symbol: str) -> str:
 
 
 def mt5_bars(symbol: str, timeframe: str = "H1", count: int = 20) -> str:
+    ok, msg = ensure_mt5_running()
+    if not ok:
+        return f"[ERROR] MT5 unavailable: {msg}"
     mt5, err = _mt5()
     if err:
         return err
@@ -87,6 +95,9 @@ def mt5_bars(symbol: str, timeframe: str = "H1", count: int = 20) -> str:
 
 
 def mt5_account() -> str:
+    ok, msg = ensure_mt5_running()
+    if not ok:
+        return f"[ERROR] MT5 unavailable: {msg}"
     mt5, err = _mt5()
     if err:
         return err
@@ -111,6 +122,9 @@ def mt5_account() -> str:
 
 
 def mt5_positions() -> str:
+    ok, msg = ensure_mt5_running()
+    if not ok:
+        return f"[ERROR] MT5 unavailable: {msg}"
     mt5, err = _mt5()
     if err:
         return err
@@ -159,6 +173,9 @@ def _rsi(closes: list, period: int = 14) -> float:
 
 
 def mt5_summary(symbol: str) -> str:
+    ok, msg = ensure_mt5_running()
+    if not ok:
+        return f"[ERROR] MT5 unavailable: {msg}"
     mt5, err = _mt5()
     if err:
         return err

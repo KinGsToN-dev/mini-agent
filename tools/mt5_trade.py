@@ -7,6 +7,8 @@
 4. Логирование: все операции в trades.log
 """
 import json
+
+from tools._deps import ensure_mt5_running
 import os
 from datetime import datetime, timezone
 from pathlib import Path
@@ -196,6 +198,9 @@ def mt5_order(symbol: str, side: str, volume: float,
     side: 'BUY' или 'SELL'
     sl/tp: цены (опционально)
     """
+    ok, msg = ensure_mt5_running()
+    if not ok:
+        return f"[ERROR] MT5 unavailable: {msg}"
     _load_config()
     
     mt5, err = _mt5()
@@ -310,6 +315,9 @@ def mt5_order(symbol: str, side: str, volume: float,
 
 def mt5_close(ticket: int, comment: str = "close by mini-agent") -> str:
     """Закрывает позицию по ticket."""
+    ok, msg = ensure_mt5_running()
+    if not ok:
+        return f"[ERROR] MT5 unavailable: {msg}"
     _load_config()
     
     mt5, err = _mt5()
@@ -384,6 +392,9 @@ def mt5_close(ticket: int, comment: str = "close by mini-agent") -> str:
 
 def mt5_close_all(comment: str = "close all by mini-agent") -> str:
     """Закрывает все позиции."""
+    ok, msg = ensure_mt5_running()
+    if not ok:
+        return f"[ERROR] MT5 unavailable: {msg}"
     _load_config()
     
     mt5, err = _mt5()
@@ -429,6 +440,9 @@ def mt5_close_all(comment: str = "close all by mini-agent") -> str:
 
 def mt5_modify(ticket: int, sl: float = None, tp: float = None) -> str:
     """Изменяет SL/TP существующей позиции."""
+    ok, msg = ensure_mt5_running()
+    if not ok:
+        return f"[ERROR] MT5 unavailable: {msg}"
     _load_config()
     
     mt5, err = _mt5()
@@ -478,6 +492,9 @@ def mt5_pending(symbol: str, side: str, price: float, volume: float,
     Отложенный ордер.
     side: 'BUY_LIMIT', 'SELL_LIMIT', 'BUY_STOP', 'SELL_STOP'
     """
+    ok, msg = ensure_mt5_running()
+    if not ok:
+        return f"[ERROR] MT5 unavailable: {msg}"
     _load_config()
     
     mt5, err = _mt5()
