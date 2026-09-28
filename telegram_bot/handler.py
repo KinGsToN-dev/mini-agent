@@ -37,7 +37,7 @@ def session_id_for_chat(chat_id: int) -> str:
     return f"tg_{chat_id}"
 
 
-def _post(url: str, payload: dict, timeout: float = 120.0) -> dict:
+def _post(url: str, payload: dict, timeout: float = 300.0) -> dict:
     try:
         with httpx.Client(timeout=timeout) as client:
             r = client.post(url, json=payload)

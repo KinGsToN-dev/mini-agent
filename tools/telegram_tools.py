@@ -14,6 +14,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def _tg_log(msg: str):
+    from datetime import datetime
+    try:
+        with open('telegram_debug.log', 'a', encoding='utf-8') as f:
+            ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            f.write(f'[{ts}] {msg}' + chr(10))
+    except Exception:
+        pass
+
 # Импорт контекста инструментов
 try:
     from tools.registry import get_tool_context
@@ -47,6 +56,11 @@ def telegram_send(
     if not message.strip():
         return "[ERROR] Пустое сообщение"
 
+    # FIX: force command bot if available in env
+    import os as _os
+    if not use_command_bot and _os.getenv("TELEGRAM_COMMAND_BOT_TOKEN"):
+        use_command_bot = True
+
     # --- Читаем контекст (если он есть) ---
     ctx_chat_id = None
     ctx_use_command_bot = False
@@ -61,6 +75,7 @@ def telegram_send(
     # --- Приоритет: параметр > контекст > env ---
     effective_chat_id = chat_id if chat_id is not None else ctx_chat_id
     effective_use_command_bot = use_command_bot or ctx_use_command_bot
+    _tg_log(f"TG_SEND: param={chat_id}, ctx={ctx_chat_id}, eff={effective_chat_id}, use_cmd={effective_use_command_bot}")
 
     # --- Токен ---
     if effective_use_command_bot:
@@ -142,6 +157,11 @@ def telegram_send_photo(
     from pathlib import Path
 
     # --- Проверка файла ---
+    # FIX: force command bot if available in env
+    import os as _os2
+    if not use_command_bot and _os2.getenv("TELEGRAM_COMMAND_BOT_TOKEN"):
+        use_command_bot = True
+
     p = Path(photo_path)
     if not p.exists():
         return f"[ERROR] Файл не найден: {photo_path}"
@@ -165,6 +185,7 @@ def telegram_send_photo(
 
     effective_chat_id = chat_id if chat_id is not None else ctx_chat_id
     effective_use_command_bot = use_command_bot or ctx_use_command_bot
+    _tg_log(f"TG_PHOTO: param={chat_id}, ctx={ctx_chat_id}, eff={effective_chat_id}, use_cmd={effective_use_command_bot}, photo={photo_path}")
 
     # --- Токен ---
     if effective_use_command_bot:

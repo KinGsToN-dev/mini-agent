@@ -1,100 +1,161 @@
+# ============================================================
 # Python
+# ============================================================
 __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
-
-# Virtual environment
 .venv/
 venv/
 env/
 
+# ============================================================
 # Secrets
+# ============================================================
 .env
 *.key
 
+# ============================================================
 # User sessions
+# ============================================================
 sessions/*.json
 sessions/*.jsonl
 sessions/_last.json
 
+# ============================================================
 # Cache and logs
+# ============================================================
 agent.log
 agent_state.json
+briefing.log
+position_monitor.log
+trades.log
+telegram_debug.log
+*.log
 
-# Agent artifacts
+# ============================================================
+# Agent artifacts (screenshots)
+# ============================================================
+screenshot.png
 screenshot_*.png
 screen_analysis.png
 error_check.png
-screenshot.png
+XAUUSD.png
+xauusd_*.png
+xauusd_chart.png
+xauusd_screenshot.png
+xauusd_tv.png
+*_chart.png
+*_screenshot.png
 
+# TV screenshots
+tv_screenshots/
+tv_test_screenshot.png
+
+# ============================================================
+# TV temporary dumps and test scripts
+# ============================================================
+_tv_dump/
+_tv_dump2/
+_tv_dump3/
+_tv_*.py
+_tv_*.json
+
+# ============================================================
 # Temp files
+# ============================================================
 /temp_*.py
 /debug_*.py
 /tmp*
 /_mistral_raw.txt
-
-# IDE
-.vscode/
-.idea/
-# pytest
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Vision test scripts
-test_vision_*.py
-
-# Backups
-*.bak_*
-*.bak2_*
-*.bak3_*
-_c3_patch.log
-_c*_patch.log
-
-# Patch scripts
-_patch_*.py
-_clean_*.py
-
-# Debug dumps
 *_debug.txt
 project_dump.txt
 *_dump.txt
 *.dump
 
-requirements.txt.bak_*
-# Logs
-*.log
-briefing.log
-agent.log
-position_monitor.log
-trades.log
+# ============================================================
+# IDE / pytest
+# ============================================================
+.vscode/
+.idea/
+.pytest_cache/
+.coverage
+htmlcov/
 
-# TV screenshots
-tv_screenshots/
+# ============================================================
+# Vision test scripts
+# ============================================================
+test_vision_*.py
 
-# TV temporary dumps and test scripts
-_tv_dump/
-_tv_dump2/
-_tv_dump3/
-_tv_*.py
-tv_test_screenshot.png
-tv_screenshots/
-
-# Backups
+# ============================================================
+# Backups (files)
+# ============================================================
+*.bak
 *.bak_*
+*.bak2_*
+*.bak3_*
 *.bak_tv_*
 *.bak_dbg_*
 *.bak_fix_*
-*.bak2_*
-*.bak3_*
+*.bak_p1_*
+*.bak_p11_*
+*.bak_dbg_*
 requirements.txt.bak_*
+restart_all.ps1.bak*
+core.py.bak_*
+telegram_tools.py.bak_*
+tradingview.py.bak_*
+handler.py.bak_*
+provider_router.py.bak_*
+streaming.py.bak_*
+app.py.bak_*
+models.py.bak_*
+session_manager.py.bak_*
+test_agent_server.py.bak_*
+test_daily_briefing.py.bak_*
+test_session_manager.py.bak_*
+test_telegram_bot.py.bak_*
+test_telegram_tools.py.bak_*
 
-# Logs
-*.log
+# ============================================================
+# Backups (directories)
+# ============================================================
+_backup_*/
+_backup_log_*/
+_backup_patch_*/
+_backup_tgfix_*/
 
-# Patch scripts
+# ============================================================
+# Patch scripts (Python)
+# ============================================================
 _patch_*.py
 _clean_*.py
 _fix_*.py
 _add_debug.py
+make_*.py
+force_*.py
+final_*.py
+patch_*.py
+bulletproof_*.py
+fix_*.py
+fix_all.ps1
+
+# ============================================================
+# Patch scripts (PowerShell / py launchers)
+# ============================================================
+apply_patches.ps1
+add_logging.ps1
+add_logging.py
+dump_project.ps1
+show_project.ps1
+fix_telegram_photo.ps1
+make_restart.py
+make_restart_v2.py
+
+# ============================================================
+# Patch logs
+# ============================================================
+_c3_patch.log
+_c4_patch.log
+_c5_patch.log
+_c*_patch.log

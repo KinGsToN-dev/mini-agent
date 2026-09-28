@@ -163,6 +163,16 @@ def tv_screenshot(save_path: str = None) -> str:
 # ============================================================
 
 def tv_analyze(prompt: str = None) -> str:
+    # FIX: save context BEFORE asyncio.run, because ContextVar is lost inside
+    _saved_chat_id = None
+    _saved_use_cmd = False
+    try:
+        from tools.registry import get_tool_context
+        _ctx = get_tool_context() or {}
+        _saved_chat_id = _ctx.get("chat_id")
+        _saved_use_cmd = bool(_ctx.get("use_command_bot"))
+    except Exception:
+        pass
     """
     Делает скриншот TradingView и отправляет в Gemini Vision.
 
@@ -231,7 +241,21 @@ def tv_analyze(prompt: str = None) -> str:
                 if text:
                     global _last_vision_model
                     _last_vision_model = model
-                    return f"[Модель: {model}]\n\n{text}"
+                    # FIX: send photo right away from the same context
+                    # so it goes from the same bot as the text
+                    try:
+                        from tools.telegram_tools import telegram_send_photo
+                        caption = f"XAUUSD - {model}"
+                        # FIX: pass saved context explicitly (ContextVar is lost after asyncio.run)
+                        telegram_send_photo(
+                            str(img_path),
+                            caption=caption,
+                            chat_id=_saved_chat_id,
+                            use_command_bot=_saved_use_cmd,
+                        )
+                    except Exception as _e:
+                        pass
+                    return f"[Модель: {model}]\n[Скриншот: {img_path}]\n\n{text}"
             except Exception as e:
                 last_error = e
                 continue

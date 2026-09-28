@@ -122,7 +122,7 @@ class GeminiAgent:
         self.last_interaction_id = None
         return self.provider_name, self.model_name
 
-    def _ask_openai_compat(self, user_text: str) -> str:
+    def _ask_openai_compat(self, user_text: str, chat_id=None) -> str:
         """Отправка через Groq/Mistral (OpenAI-совместимый API)."""
         import time as _time
         from config import SYSTEM_PROMPT
@@ -223,6 +223,8 @@ class GeminiAgent:
             clear_tool_context()
         
         self.last_user_message = user_text
+        # FIX: track if telegram_send was called during this ask
+        self._tg_sent_during_ask = False
 
         # Локальная запись user-сообщения
         try:
@@ -239,10 +241,10 @@ class GeminiAgent:
                 category, confidence, source = classifier.classify(user_text, available)
                 # Маппинг категории → провайдер
                 category_to_provider = {
-                    "trading": "groq",
+                    "trading": "gemini",
                     "vision": "gemini",
                     "code": "mistral",
-                    "web_search": "groq",
+                    "web_search": "gemini",
                     "general": "groq",
                 }
                 target = category_to_provider.get(category)
@@ -258,7 +260,7 @@ class GeminiAgent:
 
         # Если провайдер НЕ gemini — идём через OpenAI-совместимый путь
         if self.provider_name != "gemini":
-            return self._ask_openai_compat(user_text)
+            return self._ask_openai_compat(user_text, chat_id=chat_id)
 
         # Дальше — только для gemini
         self._maybe_switch_by_route(user_text)
@@ -295,6 +297,14 @@ class GeminiAgent:
             console.print(f"\n[dim]⏱  ответ модели за {time.time()-t2:.2f}с[/dim]")
 
         self.last_interaction_id = interaction_id
+        # FIX: if telegram_send was not called and chat_id is set,
+        # force-send the final text to Telegram
+        try:
+            if chat_id is not None and not getattr(self, '_tg_sent_during_ask', False) and text:
+                from tools.telegram_tools import telegram_send
+                telegram_send(text, title="XAUUSD - анализ", chat_id=chat_id, use_command_bot=True)
+        except Exception as _e:
+            pass
         # Локальная запись ответа агента
         try:
             if self.current_session_name and text:
@@ -319,6 +329,9 @@ class GeminiAgent:
             ))
             t = time.time()
             result = execute_tool(name, args)
+            # FIX: mark that telegram_send was called
+            if name in ("telegram_send", "send_telegram_message", "send_telegram", "tg_send"):
+                self._tg_sent_during_ask = True
             analytics.get().record_tool_call()
             preview = result if len(result) < 500 else result[:500] + "..."
             console.print(Panel.fit(preview, title="tool result", border_style="dim"))

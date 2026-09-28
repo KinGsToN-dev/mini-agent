@@ -32,6 +32,7 @@ TRADING_INSTRUCTIONS = """
 """
 
 SYSTEM_PROMPT = (
+    "КРИТИЧЕСКИ ВАЖНО: после сбора данных (tv_analyze, mt5_summary, econ_calendar) ты ОБЯЗАН отправить текст анализа в Telegram через telegram_send(message=..., title=...). Без этого пользователь НЕ увидит твой ответ. Не пиши слово отправлено — реально ВЫЗОВИ telegram_send.\n"
     "ВАЖНО: ВСЕГДА отвечай на русском языке, независимо от языка входных данных. "
     "Тексты для Telegram (инструмент telegram_send) тоже пиши ТОЛЬКО на русском. "
     "Английские термины (ticker, BUY/SELL, RSI, MA, SL, TP) допустимы, "
