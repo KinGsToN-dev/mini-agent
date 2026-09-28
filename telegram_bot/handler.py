@@ -110,7 +110,7 @@ def handle_message(chat_id: int, text: str, username: Optional[str] = None) -> s
     logger.info("chat=%s user=%s msg=%r", chat_id, username, text[:80])
 
     try:
-        data = _post(f"{base}/ask", {"text": text, "session_id": sid})
+        data = _post(f"{base}/ask", {"text": text, "session_id": sid, "chat_id": chat_id})
     except RuntimeError as e:
         return str(e)
 

@@ -160,3 +160,44 @@ class TestBotFilters:
         with patch.object(bot, "_send_message") as mock_send:
             bot._process_update(update)
             mock_send.assert_not_called()
+
+# ============================================================
+# C.5: chat_id передаётся в /ask
+# ============================================================
+
+class TestHandlerAskChatId:
+
+    @pytest.mark.unit
+    def test_ask_passes_chat_id_to_server(self):
+        """handle_message передаёт chat_id в payload /ask."""
+        resp = {"answer": "ok", "provider": "p", "model": "m", "duration_ms": 0}
+        with patch("telegram_bot.handler._post", return_value=resp) as mock_post:
+            handler.handle_message(999, "привет")
+            # mock_post вызывается как _post(url, payload)
+            call_args = mock_post.call_args[0]
+            url = call_args[0]
+            payload = call_args[1]
+            assert "/ask" in url
+            assert payload["chat_id"] == 999
+            assert payload["text"] == "привет"
+            assert payload["session_id"] == "tg_999"
+
+    @pytest.mark.unit
+    def test_ask_passes_different_chat_ids(self):
+        """Разные chat_id — разные payload."""
+        resp = {"answer": "ok", "provider": "p", "model": "m", "duration_ms": 0}
+        for cid in [111, 22222, 638829844]:
+            with patch("telegram_bot.handler._post", return_value=resp) as mock_post:
+                handler.handle_message(cid, "test")
+                payload = mock_post.call_args[0][1]
+                assert payload["chat_id"] == cid
+                assert payload["session_id"] == f"tg_{cid}"
+
+    @pytest.mark.unit
+    def test_reset_does_not_pass_chat_id(self):
+        """/reset не передаёт chat_id (только session_id)."""
+        with patch("telegram_bot.handler._post", return_value={}) as mock_post:
+            handler.handle_message(999, "/reset")
+            payload = mock_post.call_args[0][1]
+            assert "chat_id" not in payload or payload.get("chat_id") is None
+
