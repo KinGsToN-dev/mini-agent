@@ -216,6 +216,12 @@ class GeminiAgent:
         console.print("[green]Кэш исчерпанных моделей сброшен[/green]")
 
     def ask(self, user_text: str, chat_id: int | None = None) -> str:
+        # Установка контекста инструментов (для telegram_send)
+        if chat_id is not None:
+            set_tool_context(chat_id=chat_id, use_command_bot=True)
+        else:
+            clear_tool_context()
+        
         self.last_user_message = user_text
 
         # Локальная запись user-сообщения
@@ -295,6 +301,7 @@ class GeminiAgent:
                 history_mod.append_message(self.current_session_name, "agent", text)
         except Exception:
             pass
+        clear_tool_context()
         return text or "(пустой ответ)"
 
     def _run_stream(self, kwargs):

@@ -38,6 +38,12 @@ def telegram_send(
         use_command_bot: если True — использовать токен
                          TELEGRAM_COMMAND_BOT_TOKEN. Если False — TELEGRAM_BOT_TOKEN.
     """
+    try:
+        from tools.registry import get_tool_context
+        _ctx = get_tool_context()
+    except Exception:
+        _ctx = None
+
     if not message.strip():
         return "[ERROR] Пустое сообщение"
 
