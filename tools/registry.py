@@ -1,5 +1,7 @@
 """Регистр инструментов и их схем для LLM."""
 
+from contextvars import ContextVar
+
 from .shell import run_shell
 from .files import read_file, write_file
 from .listdir import list_dir
@@ -15,6 +17,36 @@ from .mt5_tools import mt5_quote, mt5_bars, mt5_account, mt5_positions, mt5_summ
 from .mt5_trade import mt5_order, mt5_close, mt5_close_all, mt5_modify, mt5_pending
 from .news_tools import econ_calendar
 from .telegram_tools import telegram_send
+
+
+# ============================================================
+# Контекст инструментов (chat_id, use_command_bot)
+# ============================================================
+
+_tool_context: ContextVar[dict] = ContextVar("tool_context", default={})
+
+
+def set_tool_context(chat_id: int | None = None, use_command_bot: bool = False):
+    """Устанавливает контекст для текущего вызова инструмента.
+
+    Вызывается агентом перед execute_tool, чтобы инструменты могли
+    получить chat_id (для telegram_send) и флаг использования
+    командного бота.
+    """
+    _tool_context.set({
+        "chat_id": chat_id,
+        "use_command_bot": use_command_bot,
+    })
+
+
+def get_tool_context() -> dict:
+    """Возвращает текущий контекст инструмента (dict)."""
+    return _tool_context.get()
+
+
+def clear_tool_context():
+    """Сбрасывает контекст."""
+    _tool_context.set({})
 
 
 # Глобальный клиент для vision-запросов
