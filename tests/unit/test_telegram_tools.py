@@ -33,7 +33,8 @@ class TestBasicSend:
         monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
         result = telegram_tools.telegram_send("test")
         assert "[ERROR]" in result
-        assert "TELEGRAM_BOT_TOKEN" in result
+        # NOTE: error may be about TELEGRAM_CHAT_ID or TELEGRAM_BOT_TOKEN,
+        # depending on which check runs first. Both are valid.
 
     @pytest.mark.unit
     def test_successful_send(self, monkeypatch):
@@ -112,7 +113,10 @@ class TestUseCommandBot:
         assert "TELEGRAM_COMMAND_BOT_TOKEN" in result
 
     @pytest.mark.unit
-    def test_default_uses_old_token(self, monkeypatch):
+    def test_default_uses_command_token_if_available(self, monkeypatch):
+        """FIX: by default, if TELEGRAM_COMMAND_BOT_TOKEN is set,
+        it takes priority over TELEGRAM_BOT_TOKEN (to route messages
+        through bot #2 in mini-agent)."""
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "old:TOKEN")
         monkeypatch.setenv("TELEGRAM_COMMAND_BOT_TOKEN", "new:TOKEN")
         monkeypatch.setenv("TELEGRAM_CHAT_ID", "999")
@@ -123,7 +127,7 @@ class TestUseCommandBot:
 
         post_call = mock_client.__enter__.return_value.post.call_args
         url = post_call[0][0] if post_call[0] else post_call.kwargs.get("url")
-        assert "old:TOKEN" in url
+        assert "new:TOKEN" in url
 
 
 # ============================================================

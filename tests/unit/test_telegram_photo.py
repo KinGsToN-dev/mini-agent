@@ -54,6 +54,7 @@ class TestPhotoSend:
     @pytest.mark.unit
     def test_missing_token(self, tmp_path, monkeypatch):
         monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
+        monkeypatch.delenv("TELEGRAM_COMMAND_BOT_TOKEN", raising=False)
         monkeypatch.setenv("TELEGRAM_CHAT_ID", "999")
 
         img = tmp_path / "test.png"
