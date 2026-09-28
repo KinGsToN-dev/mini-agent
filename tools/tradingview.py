@@ -40,6 +40,21 @@ VISION_MODELS = [
 ]
 
 
+# Последний скриншот и модель, которая его прочитала
+_last_screenshot_path = None
+_last_vision_model = None
+
+
+def get_last_screenshot_path() -> str | None:
+    """Возвращает путь к последнему скриншоту TradingView."""
+    return _last_screenshot_path
+
+
+def get_last_vision_model() -> str | None:
+    """Возвращает имя модели, которая последней читала скриншот."""
+    return _last_vision_model
+
+
 # ============================================================
 # CDP — поиск вкладки
 # ============================================================
@@ -135,6 +150,8 @@ def tv_screenshot(save_path: str = None) -> str:
             save_path.parent.mkdir(parents=True, exist_ok=True)
 
         save_path.write_bytes(img_bytes)
+        global _last_screenshot_path
+        _last_screenshot_path = str(save_path)
         return f"[OK] Скриншот сохранён: {save_path} ({len(img_bytes)} bytes)"
 
     except Exception as e:
@@ -212,6 +229,8 @@ def tv_analyze(prompt: str = None) -> str:
                 )
                 text = response.text if hasattr(response, "text") else str(response)
                 if text:
+                    global _last_vision_model
+                    _last_vision_model = model
                     return f"[Модель: {model}]\n\n{text}"
             except Exception as e:
                 last_error = e

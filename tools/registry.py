@@ -16,7 +16,7 @@ from .web_search import web_search
 from .mt5_tools import mt5_quote, mt5_bars, mt5_account, mt5_positions, mt5_summary
 from .mt5_trade import mt5_order, mt5_close, mt5_close_all, mt5_modify, mt5_pending
 from .news_tools import econ_calendar
-from .telegram_tools import telegram_send
+from .telegram_tools import telegram_send, telegram_send_photo
 from .tradingview import tv_screenshot, tv_analyze
 
 
@@ -370,6 +370,18 @@ TOOL_SCHEMAS = [
             },
         },
     },
+    {
+        "type": "function", "name": "telegram_send_photo",
+        "description": "Отправить фото (PNG/JPEG) в Telegram. Используй для отправки скриншота графика TradingView после tv_analyze. В caption указывай тикер и модель, которая прочитала график.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "photo_path": {"type": "string", "description": "Путь к файлу PNG/JPEG"},
+                "caption": {"type": "string", "description": "Подпись (до 1000 символов)"},
+            },
+            "required": ["photo_path"],
+        },
+    },
 ]
 
 
@@ -399,6 +411,7 @@ TOOL_FUNCTIONS = {
     "mt5_pending": mt5_pending,
     "econ_calendar": econ_calendar,
     "telegram_send": telegram_send,
+    "telegram_send_photo": telegram_send_photo,
     "tv_screenshot": tv_screenshot,
     "tv_analyze": tv_analyze,
 }
