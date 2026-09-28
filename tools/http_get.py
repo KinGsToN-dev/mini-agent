@@ -43,6 +43,8 @@ def _decode(raw: bytes, content_type: str) -> str:
             return raw.decode(enc)
         except UnicodeDecodeError:
             continue
+    from agent.log import log
+    log("http_get: fallback decode utf-8 with errors=replace", level="DEBUG")
     return raw.decode("utf-8", errors="replace")
 
 

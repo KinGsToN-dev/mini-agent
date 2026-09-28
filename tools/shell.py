@@ -109,6 +109,8 @@ def _decode(raw: bytes) -> str:
                 return raw.decode(enc).replace("\xa0", " ")
             except UnicodeDecodeError:
                 continue
+        from agent.log import log
+        log("shell: fallback decode cp866", level="DEBUG")
         return raw.decode("cp866", errors="replace").replace("\xa0", " ")
     return raw.decode("utf-8", errors="replace")
 

@@ -179,8 +179,9 @@ def tv_analyze(prompt: str = None) -> str:
         _ctx = get_tool_context() or {}
         _saved_chat_id = _ctx.get("chat_id")
         _saved_use_cmd = bool(_ctx.get("use_command_bot"))
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"tradingview: get_tool_context failed: {type(e).__name__}: {e}", level="DEBUG")
     """
     Делает скриншот TradingView и отправляет в Gemini Vision.
 

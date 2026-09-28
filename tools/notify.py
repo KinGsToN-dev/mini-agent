@@ -35,10 +35,12 @@ def notify(title: str = "Мини-агент", message: str = "",
             timeout=duration,
         )
         return f"[OK] Уведомление отправлено: {title!r} / {message!r}"
-    except ImportError:
-        pass
-    except Exception:
-        pass
+    except ImportError as e:
+        from agent.log import log
+        log(f"notify: plyer not installed: {e}", level="DEBUG")
+    except Exception as e:
+        from agent.log import log
+        log(f"notify: plyer failed: {type(e).__name__}: {e}", level="DEBUG")
 
     # Fallback: PowerShell toast (только Windows 10+)
     try:

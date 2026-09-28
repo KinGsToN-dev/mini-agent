@@ -46,8 +46,9 @@ def _load_config():
         MAX_LOT = cfg.get("max_lot", MAX_LOT)
         ALLOW_LIVE = cfg.get("allow_live", ALLOW_LIVE)
         CONFIRM_REQUIRED = cfg.get("confirm_required", CONFIRM_REQUIRED)
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"mt5_trade: load_config failed: {type(e).__name__}: {e}", level="WARNING")
 
 
 def _save_config():
@@ -59,8 +60,9 @@ def _save_config():
                 "allow_live": ALLOW_LIVE,
                 "confirm_required": CONFIRM_REQUIRED,
             }, f, ensure_ascii=False, indent=2)
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"mt5_trade: save_config failed: {type(e).__name__}: {e}", level="WARNING")
 
 
 def set_max_lot(value: float):
@@ -107,8 +109,9 @@ def _log_trade(action: str, details: dict):
     try:
         with open(TRADES_LOG, "a", encoding="utf-8") as f:
             f.write(f"[{ts}] {action}: {json.dumps(details, ensure_ascii=False)}\n")
-    except Exception:
-        pass
+    except Exception as e:
+        from agent.log import log
+        log(f"mt5_trade: _log_trade failed: {type(e).__name__}: {e}", level="WARNING")
 
 
 # ============================================================

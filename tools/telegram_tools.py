@@ -26,7 +26,9 @@ def _tg_log(msg: str):
 # Импорт контекста инструментов
 try:
     from tools.registry import get_tool_context
-except ImportError:
+except ImportError as e:
+    from agent.log import log
+    log(f"telegram_tools: get_tool_context import failed: {e}", level="WARNING")
     get_tool_context = None
 
 
@@ -69,8 +71,9 @@ def telegram_send(
             ctx = get_tool_context() or {}
             ctx_chat_id = ctx.get("chat_id")
             ctx_use_command_bot = bool(ctx.get("use_command_bot"))
-        except Exception:
-            pass
+        except Exception as e:
+            from agent.log import log
+            log(f"telegram_tools: get_tool_context failed: {type(e).__name__}: {e}", level="DEBUG")
 
     # --- Приоритет: параметр > контекст > env ---
     effective_chat_id = chat_id if chat_id is not None else ctx_chat_id

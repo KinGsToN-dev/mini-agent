@@ -66,8 +66,9 @@ def save_session(name: str, agent) -> str:
             with open(path, "r", encoding="utf-8") as f:
                 old = json.load(f)
             created = old.get("created", created)
-        except Exception:
-            pass
+        except Exception as e:
+            from agent.log import log
+            log(f"sessions: read old '{name}' failed: {type(e).__name__}: {e}", level="DEBUG")
 
     # Агент теперь знает своё имя сессии — для записи в JSONL
     agent.current_session_name = name
