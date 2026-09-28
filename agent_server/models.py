@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 class AskRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=10_000)
     session_id: str = Field(default="default", max_length=100)
+    chat_id: Optional[int] = Field(default=None, description="Telegram chat_id (если запрос из бота)")
 
 
 class AskResponse(BaseModel):

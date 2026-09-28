@@ -79,7 +79,7 @@ class TestAsk:
         data = r.json()
         assert data["answer"] == "Тестовый ответ агента"
         assert data["provider"] == "test_provider"
-        mock_agent.ask.assert_called_once_with("привет")
+        mock_agent.ask.assert_called_once_with("привет", chat_id=None)
 
     @pytest.mark.unit
     def test_ask_empty_text(self, client):
@@ -168,3 +168,48 @@ class TestRoot:
     def test_404(self, client):
         r = client.get("/nonexistent")
         assert r.status_code == 404
+
+# ============================================================
+# C.4: chat_id в /ask
+# ============================================================
+
+class TestAskChatId:
+
+    @pytest.mark.unit
+    def test_ask_without_chat_id(self, client, mock_agent):
+        """Без chat_id — вызов agent.ask(text) без параметра."""
+        r = client.post("/ask", json={"text": "привет"})
+        assert r.status_code == 200
+        mock_agent.ask.assert_called_once_with("привет", chat_id=None)
+
+    @pytest.mark.unit
+    def test_ask_with_chat_id(self, client, mock_agent):
+        """С chat_id=12345 — agent.ask(text, chat_id=12345)."""
+        r = client.post("/ask", json={"text": "привет", "chat_id": 12345})
+        assert r.status_code == 200
+        mock_agent.ask.assert_called_once_with("привет", chat_id=12345)
+
+    @pytest.mark.unit
+    def test_ask_with_null_chat_id(self, client, mock_agent):
+        """chat_id=null → None."""
+        r = client.post("/ask", json={"text": "привет", "chat_id": None})
+        assert r.status_code == 200
+        mock_agent.ask.assert_called_once_with("привет", chat_id=None)
+
+    @pytest.mark.unit
+    def test_ask_with_invalid_chat_id_type(self, client):
+        """chat_id="abc" → 422 (валидация pydantic)."""
+        r = client.post("/ask", json={"text": "привет", "chat_id": "abc"})
+        assert r.status_code == 422
+
+    @pytest.mark.unit
+    def test_ask_with_session_and_chat_id(self, client, mock_agent):
+        """chat_id + session_id вместе."""
+        r = client.post("/ask", json={
+            "text": "привет",
+            "session_id": "tg_12345",
+            "chat_id": 12345,
+        })
+        assert r.status_code == 200
+        mock_agent.ask.assert_called_once_with("привет", chat_id=12345)
+

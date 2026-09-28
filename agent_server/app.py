@@ -121,7 +121,7 @@ def ask(req: AskRequest) -> AskResponse:
 
     t0 = time.time()
     try:
-        answer = agent.ask(req.text)
+        answer = agent.ask(req.text, chat_id=req.chat_id)
     except Exception as e:
         # Обрезаем длинные ошибки
         err_text = str(e)
