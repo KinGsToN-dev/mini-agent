@@ -1,4 +1,4 @@
-# ============================================================
+﻿# ============================================================
 # Python
 # ============================================================
 __pycache__/
@@ -184,8 +184,6 @@ probe_dependencies.py
 probe_dependencies_v2.py
 
 
-_verifier_backup/
-patch_*.ps1
 # One-off patches / backups
 _verifier_backup/
 patch_*.ps1
