@@ -14,6 +14,7 @@ from agent import history as history_mod
 from agent.router import classify, pick_model_key
 from agent import provider_router
 from agent import classifier
+from providers.capabilities import pick_provider_for_category
 from agent import analytics
 from agent.verifier import Verifier
 
@@ -242,16 +243,11 @@ class GeminiAgent:
                 from providers import registry as _prov_reg
                 available = _prov_reg.available_providers()
                 category, confidence, source = classifier.classify(user_text, available)
-                # Маппинг категории → провайдер
-                category_to_provider = {
-                    "trading": "gemini",
-                    "vision": "gemini",
-                    "code": "mistral",
-                    "web_search": "gemini",
-                    "general": "groq",
-                }
-                target = category_to_provider.get(category)
-                if target and target != self.provider_name and target in available:
+                # FIX: pick_provider_for_category учитывает supports_tools.
+                # Mistral не умеет tools → для 'покажи .py файлы' переключимся
+                # на Gemini, а для 'напиши функцию' останемся на Mistral.
+                target = pick_provider_for_category(category, user_text, available)
+                if target and target != self.provider_name:
                     console.print(
                         f"[dim]🧭 роутер: {category} → {target} "
                         f"(conf={confidence:.2f}, {source})[/dim]"
@@ -381,7 +377,6 @@ class GeminiAgent:
                 "result": [{"type": "text", "text": result}],
             })
         return results
-
 
 
 
