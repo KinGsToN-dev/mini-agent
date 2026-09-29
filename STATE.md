@@ -1,9 +1,9 @@
 ﻿# Mini-Agent — State
 
-**Дата:** 2026-09-29 09:42:38
+**Дата:** 2026-09-29 09:56:14
 **Ветка:** main
-**Последний коммит:** 40db6eb — chore: add ROADMAP.md + STATE.md + handoff scripts + auto-update hook
-**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 477 passed in 33.13s =============================
+**Последний коммит:** f13fc75 — Phase 2: add Pydantic schemas (ToolResult, TradingSignal, RiskApproval, Plan) + 22 tests
+**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 477 passed in 30.97s =============================
 **Файлов .py:** 144
 **Строк кода:** 18747
 
@@ -20,7 +20,7 @@ agent, agent_server, docs, providers, repl, repl_client, scripts, telegram_bot, 
 ## Git status (на момент сохранения)
 
 ```
-M  ROADMAP.md M  STATE.md M  agent/__init__.py A  agent/schemas.py A  tests/unit/test_schemas.py
+M  STATE.md
 ```
 
 ---
