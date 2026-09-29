@@ -56,7 +56,7 @@ Force-send из `Verifier` ломает цепочку tool-calls Gemini (`inval
 
 ## Известные баги
 
-1. **Verifier force-send** — ломает tool-call chain Gemini (`invalid_request`).
+1. **`telegram_send` принимает `text` вместо `message`** — модель иногда путает имя аргумента.  
+   Митигация: Gemini сам исправляется со второй попытки. TODO: добавить алиас `text` → `message`.
 2. **Fallback только Gemini** — при исчерпании всех Gemini-моделей не идёт в другие провайдеры.
-3. **Circular import** — `telegram_tools: get_tool_context import failed`.
-4. **Dual BOM** — при записи `core.py` через Python появляется двойной BOM.
+3. **Dual BOM** — при записи `core.py` через Python появляется двойной BOM.

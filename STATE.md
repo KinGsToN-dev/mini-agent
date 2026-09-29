@@ -1,9 +1,9 @@
 ﻿# Mini-Agent — State
 
-**Дата:** 2026-09-29 16:56:33
+**Дата:** 2026-09-29 17:11:40
 **Ветка:** main
-**Последний коммит:** 4554cf0 — fix(fallback): reset tool-call chain before switching model (fixes invalid_request 500)
-**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 32.64s =============================
+**Последний коммит:** ccd0958 — fix(fallback): chain reset + router respects exhausted + gemini skips fallback (fixes invalid_request 500)
+**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 31.47s =============================
 **Файлов .py:** 159
 **Строк кода:** 21598
 
@@ -20,7 +20,7 @@ agent, agent_server, docs, providers, repl, repl_client, scripts, telegram_bot, 
 ## Git status (на момент сохранения)
 
 ```
-M  agent/core.py M  providers/fallback.py M  tools/telegram_tools.py ?? _apply_chainfix.py ?? _apply_chainfix2.py ?? _apply_chainfix3.py ?? agent.log.old
+M  ROADMAP.md M  STATE.md ?? _apply_chainfix.py ?? _apply_chainfix2.py ?? _apply_chainfix3.py ?? agent.log.old
 ```
 
 ---
