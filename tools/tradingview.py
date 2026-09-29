@@ -255,9 +255,19 @@ def tv_analyze(prompt: str = None) -> str:
                 if text:
                     global _last_vision_model
                     _last_vision_model = model
-                    # NOTE: photo is sent by the agent (Gemini) via telegram_send_photo
-                    # (see SYSTEM_PROMPT: "ПОСЛЕ tv_analyze — отправь скриншот").
-                    # Do NOT send here — иначе дубликат скриншота.
+                    # FIX: отправляем фото прямо здесь, чтобы не зависеть от Gemini.
+                    # Инструкция в SYSTEM_PROMPT часто игнорируется lite-моделью.
+                    try:
+                        from tools.telegram_tools import telegram_send_photo
+                        caption = f"XAUUSD - {model}"
+                        telegram_send_photo(
+                            str(img_path),
+                            caption=caption,
+                            chat_id=_saved_chat_id,
+                            use_command_bot=_saved_use_cmd,
+                        )
+                    except Exception as _e:
+                        pass
                     return f"[Модель: {model}]\n[Скриншот: {img_path}]\n\n{text}"
             except Exception as e:
                 last_error = e
