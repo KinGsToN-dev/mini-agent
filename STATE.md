@@ -1,11 +1,11 @@
 ﻿# Mini-Agent — State
 
-**Дата:** 2026-09-29 17:45:30
+**Дата:** 2026-09-29 21:54:55
 **Ветка:** main
-**Последний коммит:** 9cbbbde — chore: simplify save_state.ps1 (keep manual sections), improve make_handoff.ps1
-**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 32.41s =============================
-**Файлов .py:** 156
-**Строк кода:** 21485
+**Последний коммит:** 33e1b73 — docs: STATE.md now keeps manual sections (refs ROADMAP)
+**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 31.97s =============================
+**Файлов .py:** 167
+**Строк кода:** 23996
 
 **Текущая фаза:** 2 — Pydantic-схемы (Verifier отложен до Фазы 7) (см. ROADMAP.md)
 
