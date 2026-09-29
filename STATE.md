@@ -1,9 +1,9 @@
 ﻿# Mini-Agent — State
 
-**Дата:** 2026-09-29 17:20:48
+**Дата:** 2026-09-29 17:29:02
 **Ветка:** main
-**Последний коммит:** cae520b — docs: mark circular import and verifier bugs as fixed
-**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 31.59s =============================
+**Последний коммит:** dd4ddc2 — docs: mark Phase 2 as in progress
+**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 33.70s =============================
 **Файлов .py:** 156
 **Строк кода:** 21485
 
@@ -20,7 +20,7 @@ agent, agent_server, docs, providers, repl, repl_client, scripts, telegram_bot, 
 ## Git status (на момент сохранения)
 
 ```
-M  ROADMAP.md M  STATE.md
+M  STATE.md
 ```
 
 ---
