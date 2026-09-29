@@ -1,11 +1,11 @@
 ﻿# Mini-Agent — State
 
-**Дата:** 2026-09-29 10:18:04
+**Дата:** 2026-09-29 10:57:52
 **Ветка:** main
-**Последний коммит:** 5fed493 — Phase 2: add Pydantic schemas (ToolResult, TradingSignal, RiskApproval, Plan) + 22 tests
-**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 30.44s =============================
-**Файлов .py:** 150
-**Строк кода:** 19987
+**Последний коммит:** 4249cca — Phase 2 + fix: smart provider routing (Mistral for code without tools, Gemini for code with tools)
+**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 30.27s =============================
+**Файлов .py:** 154
+**Строк кода:** 21046
 
 **Текущая фаза:** 2 — Pydantic-схемы (Verifier отложен до Фазы 7) (см. ROADMAP.md)
 
@@ -20,7 +20,7 @@ agent, agent_server, docs, providers, repl, repl_client, scripts, telegram_bot, 
 ## Git status (на момент сохранения)
 
 ```
-M  agent/core.py A  providers/capabilities.py A  tests/unit/test_capabilities.py
+ M STATE.md M  providers/fallback.py  M tools/telegram_tools.py ?? agent.log.old
 ```
 
 ---

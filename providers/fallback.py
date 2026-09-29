@@ -28,6 +28,16 @@ def is_unavailable(exc: Exception) -> bool:
 
 
 def try_with_fallback(agent, kwargs, stream_fn, console):
+    # FIX_CHAIN: do not switch model mid tool-call chain.
+    # If we have a previous_interaction_id, the chain is bound to a specific
+    # model. Switching models here breaks Gemini's tool-call chain with
+    # "invalid_request: function response turn comes immediately after a
+    # function call turn". So: reset the chain and retry with fallback.
+    if kwargs.get("previous_interaction_id"):
+        console.print("[dim]↻ chain reset (was bound to previous model)[/dim]")
+        kwargs.pop("previous_interaction_id", None)
+        agent.last_interaction_id = None
+
     order = [agent.model_key] + [k for k, _, _ in MODEL_CATALOG
                                   if k != agent.model_key]
     last_error = None
