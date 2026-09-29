@@ -1,9 +1,9 @@
 ﻿# Mini-Agent — State
 
-**Дата:** 2026-09-29 17:29:02
+**Дата:** 2026-09-29 17:37:39
 **Ветка:** main
-**Последний коммит:** dd4ddc2 — docs: mark Phase 2 as in progress
-**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 33.70s =============================
+**Последний коммит:** 1259d20 — docs: mark circular import and verifier bugs as fixed, update state
+**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 35.58s =============================
 **Файлов .py:** 156
 **Строк кода:** 21485
 
@@ -20,7 +20,7 @@ agent, agent_server, docs, providers, repl, repl_client, scripts, telegram_bot, 
 ## Git status (на момент сохранения)
 
 ```
-M  STATE.md
+ M STATE.md M  make_handoff.ps1 M  save_state.ps1
 ```
 
 ---
