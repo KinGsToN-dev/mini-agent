@@ -1,6 +1,6 @@
 ﻿# Mini-Agent — Roadmap
 
-**Текущая фаза:** 2 — Pydantic-схемы
+**Текущая фаза:** 2 — Pydantic-схемы (Verifier отложен до Фазы 7)
 
 ---
 
@@ -9,7 +9,7 @@
 | Фаза | Что | Статус |
 |------|-----|--------|
 | 0 | База (оркестрация, tools, router) | ✅ Готово |
-| 1 | Verifier | ⚠️ Отключён (force-send ломает tool-call chain) |
+| 1 | Verifier | ⏭️ Пропущено (перенесено в Фазу 7) |
 | 2 | Pydantic-схемы | ⏳ Следующая |
 | 3 | Structured Handoff | ❌ Не начато |
 | 4 | Tool Scoping | ❌ Не начато |
@@ -31,11 +31,19 @@
 
 ## Фаза 1: Verifier — детали
 
-- ✅ Класс `Verifier` (`agent/verifier.py`)
-- ✅ 25 тестов (`tests/unit/test_verifier.py`)
-- ⚠️ **Отключён** в `agent/core.py` — force-send ломает tool-call chain Gemini
-- 📋 TODO: убрать `_force_telegram_send` из `Verifier`, оставить только retry
+**Статус:** ⏭️ Пропущено (перенесено в Фазу 7).
 
+- ✅ Класс `Verifier` (`agent/verifier.py`) — написан, но не используется.
+- ✅ 25 тестов (`tests/unit/test_verifier.py`) — проходят.
+- ⚠️ **Отключён** в `agent/core.py` — force-send ломает tool-call chain Gemini.
+- 📋 **Решение:** Вернуться к `Verifier` в Фазе 7 (Token Manager) или позже.
+
+**Почему пропущено:**
+
+Force-send из `Verifier` ломает цепочку tool-calls Gemini (`invalid_request`).
+В `core.py` уже работает мягкий fallback: если после всех tool-calls
+`telegram_send` не был вызван, но пользователь его просил — отправляется
+финальный текст. Этого достаточно для текущих задач.
 ## Фаза 2: Pydantic-схемы — план
 
 - Создать `agent/schemas.py` с моделями:

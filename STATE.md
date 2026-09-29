@@ -1,13 +1,13 @@
 ﻿# Mini-Agent — State
 
-**Дата:** 2026-09-29 08:41:34
+**Дата:** 2026-09-29 09:42:38
 **Ветка:** main
-**Последний коммит:** 2f00ed7 — fix(config): remove telegram_send_photo instruction (photo sent from tv_analyze)
-**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 455 passed in 30.41s =============================
-**Файлов .py:** 141
-**Строк кода:** 18441
+**Последний коммит:** 40db6eb — chore: add ROADMAP.md + STATE.md + handoff scripts + auto-update hook
+**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 477 passed in 33.13s =============================
+**Файлов .py:** 144
+**Строк кода:** 18747
 
-**Текущая фаза:** 2 — Pydantic-схемы (см. ROADMAP.md)
+**Текущая фаза:** 2 — Pydantic-схемы (Verifier отложен до Фазы 7) (см. ROADMAP.md)
 
 ---
 
@@ -20,7 +20,7 @@ agent, agent_server, docs, providers, repl, repl_client, scripts, telegram_bot, 
 ## Git status (на момент сохранения)
 
 ```
-M  .gitignore A  ROADMAP.md A  STATE.md A  make_handoff.ps1 A  save_state.ps1 A  save_state_no_dump.ps1
+M  ROADMAP.md M  STATE.md M  agent/__init__.py A  agent/schemas.py A  tests/unit/test_schemas.py
 ```
 
 ---
