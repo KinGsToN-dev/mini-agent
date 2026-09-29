@@ -182,3 +182,11 @@ _backup_tvfix_*/
 # Probe scripts
 probe_dependencies.py
 probe_dependencies_v2.py
+
+
+_verifier_backup/
+patch_*.ps1
+# One-off patches / backups
+_verifier_backup/
+patch_*.ps1
+fix_*.ps1
