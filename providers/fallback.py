@@ -28,6 +28,10 @@ def is_unavailable(exc: Exception) -> bool:
 
 
 def try_with_fallback(agent, kwargs, stream_fn, console):
+    # FIX_CHAIN: gemini skips fallback
+    if getattr(agent, chr(112)+chr(114)+chr(111)+chr(118)+chr(105)+chr(100)+chr(101)+chr(114)+chr(95)+chr(110)+chr(97)+chr(109)+chr(101), chr(39)+chr(39)) == chr(103)+chr(101)+chr(109)+chr(105)+chr(110)+chr(105):
+        kwargs[chr(109)+chr(111)+chr(100)+chr(101)+chr(108)] = agent.model_name
+        return stream_fn(agent.client, kwargs)
     # FIX_CHAIN: do not switch model mid tool-call chain.
     # If we have a previous_interaction_id, the chain is bound to a specific
     # model. Switching models here breaks Gemini's tool-call chain with

@@ -23,13 +23,15 @@ def _tg_log(msg: str):
     except Exception:
         pass
 
-# Импорт контекста инструментов
-try:
-    from tools.registry import get_tool_context
-except ImportError as e:
-    from agent.log import log
-    log(f"telegram_tools: get_tool_context import failed: {e}", level="WARNING")
-    get_tool_context = None
+# FIX: get_tool_context импортируется лениво (внутри функций),
+# чтобы избежать circular import с tools/registry.py.
+def _get_ctx() -> dict:
+    """Лениво достаёт tool context. Возвращает {} при ошибке."""
+    try:
+        from tools.registry import get_tool_context
+        return get_tool_context() or {}
+    except ImportError:
+        return {}
 
 
 def telegram_send(
@@ -64,16 +66,9 @@ def telegram_send(
         use_command_bot = True
 
     # --- Читаем контекст (если он есть) ---
-    ctx_chat_id = None
-    ctx_use_command_bot = False
-    if get_tool_context is not None:
-        try:
-            ctx = get_tool_context() or {}
-            ctx_chat_id = ctx.get("chat_id")
-            ctx_use_command_bot = bool(ctx.get("use_command_bot"))
-        except Exception as e:
-            from agent.log import log
-            log(f"telegram_tools: get_tool_context failed: {type(e).__name__}: {e}", level="DEBUG")
+    ctx = _get_ctx()
+    ctx_chat_id = ctx.get("chat_id")
+    ctx_use_command_bot = bool(ctx.get("use_command_bot"))
 
     # --- Приоритет: параметр > контекст > env ---
     effective_chat_id = chat_id if chat_id is not None else ctx_chat_id
@@ -176,15 +171,9 @@ def telegram_send_photo(
         return f"[ERROR] Файл слишком большой: {size_kb:.0f} KB (лимит 10 MB)"
 
     # --- Контекст (chat_id, use_command_bot) ---
-    ctx_chat_id = None
-    ctx_use_command_bot = False
-    if get_tool_context is not None:
-        try:
-            ctx = get_tool_context() or {}
-            ctx_chat_id = ctx.get("chat_id")
-            ctx_use_command_bot = bool(ctx.get("use_command_bot"))
-        except Exception:
-            pass
+    ctx = _get_ctx()
+    ctx_chat_id = ctx.get("chat_id")
+    ctx_use_command_bot = bool(ctx.get("use_command_bot"))
 
     effective_chat_id = chat_id if chat_id is not None else ctx_chat_id
     effective_use_command_bot = use_command_bot or ctx_use_command_bot

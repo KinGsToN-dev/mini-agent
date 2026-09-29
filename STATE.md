@@ -1,11 +1,11 @@
 ﻿# Mini-Agent — State
 
-**Дата:** 2026-09-29 10:57:52
+**Дата:** 2026-09-29 16:56:33
 **Ветка:** main
-**Последний коммит:** 4249cca — Phase 2 + fix: smart provider routing (Mistral for code without tools, Gemini for code with tools)
-**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 30.27s =============================
-**Файлов .py:** 154
-**Строк кода:** 21046
+**Последний коммит:** 4554cf0 — fix(fallback): reset tool-call chain before switching model (fixes invalid_request 500)
+**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 32.64s =============================
+**Файлов .py:** 159
+**Строк кода:** 21598
 
 **Текущая фаза:** 2 — Pydantic-схемы (Verifier отложен до Фазы 7) (см. ROADMAP.md)
 
@@ -20,7 +20,7 @@ agent, agent_server, docs, providers, repl, repl_client, scripts, telegram_bot, 
 ## Git status (на момент сохранения)
 
 ```
- M STATE.md M  providers/fallback.py  M tools/telegram_tools.py ?? agent.log.old
+M  agent/core.py M  providers/fallback.py M  tools/telegram_tools.py ?? _apply_chainfix.py ?? _apply_chainfix2.py ?? _apply_chainfix3.py ?? agent.log.old
 ```
 
 ---

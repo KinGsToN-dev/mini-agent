@@ -42,6 +42,8 @@ class GeminiAgent:
         self.last_interaction_id = None
         self.last_user_message = ""
         self.current_session_name = None  # устанавливается при save/load
+        # FIX_CHAIN: restart ask after chain reset
+        self._chain_reset_retry = False
 
         # Загружаем кэш исчерпанных моделей
         self.auto_route = True  # авто-выбор модели под задачу
@@ -199,12 +201,22 @@ class GeminiAgent:
         self.auto_route = bool(enabled)
 
     def _maybe_switch_by_route(self, user_text: str):
+        # FIX_EXHAUSTED: router respects exhausted
         """Если auto_route включён — выбирает модель под задачу."""
         if not self.auto_route:
             return
         from config import MODEL_CATALOG
         catalog_keys = [k for k, _, _ in MODEL_CATALOG]
         target_key = pick_model_key(user_text, catalog_keys, self.exhausted)
+        # FIX_EXHAUSTED: exhausted-fallback
+        if target_key in self.exhausted:
+            from config import MODEL_CATALOG
+            for k,_,_ in MODEL_CATALOG:
+                if k not in self.exhausted:
+                    target_key = k
+                    break
+            else:
+                target_key = None
         if target_key and target_key != self.model_key:
             level = classify(user_text)
             self.model_key = target_key
@@ -294,7 +306,18 @@ class GeminiAgent:
                 "input": func_results,
                 "stream": True,
             }
-            interaction_id, text, func_calls = self._run_stream(followup)
+            # FIX_CHAIN: wrap _run_stream to catch invalid_request mid-chain
+            try:
+                interaction_id, text, func_calls = self._run_stream(followup)
+            except Exception as _chain_exc:
+                if 'invalid_request' in str(_chain_exc) and not getattr(self, '_chain_reset_retry', False):
+                    from agent.log import log
+                    log('core: invalid_request mid-loop, restarting ask', level='WARNING')
+                    print('\u21bb chain broken \u2014 restarting ask from scratch')
+                    self._chain_reset_retry = True
+                    self.last_interaction_id = None
+                    return self.ask(user_text, chat_id=chat_id)
+                raise
             console.print(f"\n[dim]⏱  ответ модели за {time.time()-t2:.2f}с[/dim]")
 
         self.last_interaction_id = interaction_id
