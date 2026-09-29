@@ -1,9 +1,9 @@
 ﻿# Mini-Agent — State
 
-**Дата:** 2026-09-29 17:37:39
+**Дата:** 2026-09-29 17:45:30
 **Ветка:** main
-**Последний коммит:** 1259d20 — docs: mark circular import and verifier bugs as fixed, update state
-**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 35.58s =============================
+**Последний коммит:** 9cbbbde — chore: simplify save_state.ps1 (keep manual sections), improve make_handoff.ps1
+**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 32.41s =============================
 **Файлов .py:** 156
 **Строк кода:** 21485
 
@@ -20,7 +20,7 @@ agent, agent_server, docs, providers, repl, repl_client, scripts, telegram_bot, 
 ## Git status (на момент сохранения)
 
 ```
- M STATE.md M  make_handoff.ps1 M  save_state.ps1
+M  STATE.md
 ```
 
 ---
