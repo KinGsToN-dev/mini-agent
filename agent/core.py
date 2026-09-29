@@ -15,6 +15,7 @@ from agent.router import classify, pick_model_key
 from agent import provider_router
 from agent import classifier
 from agent import analytics
+from agent.verifier import Verifier
 
 console = Console()
 
@@ -283,9 +284,11 @@ class GeminiAgent:
                       f"({self.model_name})[/dim]")
 
         iteration = 0
+        all_tool_results = []   # FIX: накапливаем результаты для Verifier
         while func_calls and iteration < MAX_TOOL_ITERATIONS:
             iteration += 1
             func_results = self._execute_calls(func_calls, chat_id=chat_id)
+            all_tool_results.extend(func_results)
 
             t2 = time.time()
             console.print(f"[dim]⏱  продолжение с результатами...[/dim]")
@@ -299,14 +302,46 @@ class GeminiAgent:
             console.print(f"\n[dim]⏱  ответ модели за {time.time()-t2:.2f}с[/dim]")
 
         self.last_interaction_id = interaction_id
-        # FIX: if telegram_send was not called and chat_id is set,
-        # force-send the final text to Telegram
-        try:
-            if chat_id is not None and not getattr(self, '_tg_sent_during_ask', False) and text:
-                from tools.telegram_tools import telegram_send
-                telegram_send(text, title="XAUUSD - анализ", chat_id=chat_id, use_command_bot=True)
-        except Exception as _e:
-            pass
+
+        # FIX: force-send финального текста, если Gemini не вызвал telegram_send
+        if chat_id is not None and text:
+            import re as _re
+            _user_wants = any(_re.search(p, user_text.lower()) for p in [
+                r'\bотправь\b', r'\bотправить\b', r'\bскинь\b', r'\bпришли\b',
+                r'\bsend\b', r'\btelegram\b', r'\bтелеграм',
+            ])
+            _tg_sent = getattr(self, '_tg_sent_during_ask', False)
+            if _user_wants and not _tg_sent:
+                try:
+                    from tools.telegram_tools import telegram_send
+                    telegram_send(text, title='Анализ', chat_id=chat_id, use_command_bot=True)
+                    from agent.log import log
+                    log(f'core: force-sent final text to telegram (chat_id={chat_id})', level='INFO')
+                except Exception as _e:
+                    from agent.log import log
+                    log(f'core: force-send failed: {type(_e).__name__}: {_e}', level='ERROR')
+
+
+        # FIX: Verifier - ВРЕМЕННО ОТКЛЮЧЁН
+        # Причина: force-send ломает tool-call цепочку Gemini (invalid_request).
+        # Вернём после переделки Verifier.
+        # try:
+        #     verifier = Verifier(self)
+        #     verify_result = verifier.check_and_fix(
+        #         user_text=user_text,
+        #         tool_results=all_tool_results,
+        #         final_text=text,
+        #         chat_id=chat_id,
+        #     )
+        #     text = verify_result.final_text
+        #     if verify_result.issues:
+        #         from agent.log import log
+        #         log(f'verifier: issues={verify_result.issues}, fixed={verify_result.fixed}',
+        #             level='INFO')
+        # except Exception as _e:
+        #     from agent.log import log
+        #     log(f'verifier failed: {type(_e).__name__}: {_e}', level='ERROR')
+
         # Локальная запись ответа агента
         try:
             if self.current_session_name and text:
