@@ -1,11 +1,11 @@
 ﻿# Mini-Agent — State
 
-**Дата:** 2026-09-29 17:11:40
+**Дата:** 2026-09-29 17:20:48
 **Ветка:** main
-**Последний коммит:** ccd0958 — fix(fallback): chain reset + router respects exhausted + gemini skips fallback (fixes invalid_request 500)
-**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 31.47s =============================
-**Файлов .py:** 159
-**Строк кода:** 21598
+**Последний коммит:** cae520b — docs: mark circular import and verifier bugs as fixed
+**Тесты:** tests\unit\test_verifier.py .........................                    [100%] |  | ============================ 525 passed in 31.59s =============================
+**Файлов .py:** 156
+**Строк кода:** 21485
 
 **Текущая фаза:** 2 — Pydantic-схемы (Verifier отложен до Фазы 7) (см. ROADMAP.md)
 
@@ -20,7 +20,7 @@ agent, agent_server, docs, providers, repl, repl_client, scripts, telegram_bot, 
 ## Git status (на момент сохранения)
 
 ```
-M  ROADMAP.md M  STATE.md ?? _apply_chainfix.py ?? _apply_chainfix2.py ?? _apply_chainfix3.py ?? agent.log.old
+M  ROADMAP.md M  STATE.md
 ```
 
 ---
