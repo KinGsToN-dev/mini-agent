@@ -1,5 +1,5 @@
-"""Инструменты MetaTrader 5 — только чтение (безопасно)."""
-from datetime import datetime
+﻿"""Инструменты MetaTrader 5 — только чтение (безопасно)."""
+from datetime import datetime, timezone
 
 from tools._deps import ensure_mt5_running
 

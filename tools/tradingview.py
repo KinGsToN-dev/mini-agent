@@ -255,20 +255,9 @@ def tv_analyze(prompt: str = None) -> str:
                 if text:
                     global _last_vision_model
                     _last_vision_model = model
-                    # FIX: send photo right away from the same context
-                    # so it goes from the same bot as the text
-                    try:
-                        from tools.telegram_tools import telegram_send_photo
-                        caption = f"XAUUSD - {model}"
-                        # FIX: pass saved context explicitly (ContextVar is lost after asyncio.run)
-                        telegram_send_photo(
-                            str(img_path),
-                            caption=caption,
-                            chat_id=_saved_chat_id,
-                            use_command_bot=_saved_use_cmd,
-                        )
-                    except Exception as _e:
-                        pass
+                    # NOTE: photo is sent by the agent (Gemini) via telegram_send_photo
+                    # (see SYSTEM_PROMPT: "ПОСЛЕ tv_analyze — отправь скриншот").
+                    # Do NOT send here — иначе дубликат скриншота.
                     return f"[Модель: {model}]\n[Скриншот: {img_path}]\n\n{text}"
             except Exception as e:
                 last_error = e
